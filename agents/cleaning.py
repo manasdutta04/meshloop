@@ -32,7 +32,7 @@ def _clean_tabular(ingestion_result: dict) -> dict:
             try:
                 # Use format="mixed" or similar if infer_datetime_format is not available in pandas 2.2.2+
                 df[col] = pd.to_datetime(df[col], errors="coerce")
-                type_fixes[col] = "→ datetime"
+                type_fixes[col] = "-> datetime"
             except Exception:
                 pass
         
@@ -48,7 +48,7 @@ def _clean_tabular(ingestion_result: dict) -> dict:
             # If 70%+ of values parsed as numeric, convert the column
             if numeric_attempt.notna().mean() > 0.7:
                 df[col] = numeric_attempt
-                type_fixes[col] = "string → numeric"
+                type_fixes[col] = "string -> numeric"
     
     if type_fixes:
         issues.append(f"Fixed column types: {type_fixes}")

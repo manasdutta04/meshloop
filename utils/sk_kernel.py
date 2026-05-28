@@ -30,7 +30,7 @@ def get_kernel() -> sk.Kernel:
         api_key=os.getenv("GITHUB_TOKEN"),
     )
     # Override the base URL to point to GitHub Models
-    chat_service._client.base_url = "https://models.github.ai/inference"
+    chat_service.client.base_url = "https://models.github.ai/inference"
     
     _kernel.add_service(chat_service)
     
@@ -45,7 +45,7 @@ def get_kernel_with_phi4() -> sk.Kernel:
         ai_model_id="microsoft/phi-4",
         api_key=os.getenv("GITHUB_TOKEN"),
     )
-    chat_service._client.base_url = "https://models.github.ai/inference"
+    chat_service.client.base_url = "https://models.github.ai/inference"
     kernel.add_service(chat_service)
     return kernel
 
