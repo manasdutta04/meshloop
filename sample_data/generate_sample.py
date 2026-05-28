@@ -23,5 +23,5 @@ df.loc[[10, 20, 30], "Sales"] = None  # nulls
 df.loc[df["Product"].str.upper() == "WIDGET B", "Returns"] *= 3.2  # hidden pattern!
 
 df.to_csv("sample_data/messy_sales.csv", index=False)
-print("Created sample_data/messy_sales.csv")
+print("[OK] Created sample_data/messy_sales.csv")
 print(f"   Shape: {df.shape}, Nulls: {df.isnull().sum().sum()}")
