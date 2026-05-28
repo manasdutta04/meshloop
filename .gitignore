@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+.chroma/
+uploads/
+*.env
+.llm_cache.json
+
+plan.txt
