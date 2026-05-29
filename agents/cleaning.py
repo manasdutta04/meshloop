@@ -98,12 +98,62 @@ def _clean_tabular(ingestion_result: dict) -> dict:
     report["cols_after"] = len(df.columns)
     report["total_fixes"] = len(issues)
 
+    balance = _balance_tabular(df)
     return {
         "cleaned_df": df,
+        "balanced_df": balance["balanced_df"],
+        "balance_report": balance["balance_report"],
         "clean_text": df.to_string(max_rows=100),
         "issues_found": issues,
         "cleaning_report": report,
     }
+
+
+def _balance_tabular(df: pd.DataFrame) -> dict:
+    if df is None or len(df) == 0:
+        return {"balanced_df": None, "balance_report": {}}
+
+    cat_cols = df.select_dtypes(include=["object", "category"]).columns.tolist()
+    best_col = None
+    best_score = 0.0
+
+    for col in cat_cols:
+        vc = df[col].value_counts(dropna=False)
+        if len(vc) < 2:
+            continue
+        top_share = vc.iloc[0] / vc.sum()
+        if top_share < 0.70:
+            continue
+        score = vc.iloc[0] / vc.iloc[-1]
+        if score > best_score:
+            best_score = score
+            best_col = col
+
+    if best_col is None or best_score < 2.0:
+        return {"balanced_df": None, "balance_report": {}}
+
+    counts = df[best_col].value_counts()
+    max_n = counts.max()
+    balanced_chunks = []
+    for value, count in counts.items():
+        group = df[df[best_col] == value]
+        balanced_chunks.append(group)
+        if count < max_n:
+            sample = group.sample(n=max_n - count, replace=True, random_state=42)
+            balanced_chunks.append(sample)
+
+    balanced_df = pd.concat(balanced_chunks, ignore_index=True)
+    balanced_df = balanced_df.sample(frac=1, random_state=42).reset_index(drop=True)
+
+    return {
+        "balanced_df": balanced_df,
+        "balance_report": {
+            "balanced_on": best_col,
+            "original_counts": counts.to_dict(),
+            "balanced_count": max_n,
+        },
+    }
+
 
 def _clean_text(ingestion_result: dict) -> dict:
     raw = ingestion_result.get("raw_text", "")
@@ -119,6 +169,8 @@ def _clean_text(ingestion_result: dict) -> dict:
 
     return {
         "cleaned_df": None,
+        "balanced_df": None,
+        "balance_report": {},
         "clean_text": clean,
         "issues_found": issues,
         "cleaning_report": {"chars_before": len(raw), "chars_after": len(clean)},

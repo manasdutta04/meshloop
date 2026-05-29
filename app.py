@@ -255,6 +255,38 @@ else:
             for fix in cln["issues_found"]:
                 st.markdown(f"- ✅ {fix}")
 
+        # Download cleaned/balanced output
+        df_clean_tab = cln.get("cleaned_df")
+        if df_clean_tab is not None:
+            st.divider()
+            st.markdown("#### 💾 Export Processed Data")
+            base_name = os.path.splitext(ds["file_name"])[0]
+            cleaned_csv = df_clean_tab.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                "📥 Download cleaned CSV",
+                data=cleaned_csv,
+                file_name=f"cleaned_{base_name}.csv",
+                mime="text/csv",
+            )
+
+            balanced_df = cln.get("balanced_df")
+            if balanced_df is not None:
+                balanced_csv = balanced_df.to_csv(index=False).encode("utf-8")
+                st.download_button(
+                    "📥 Download balanced CSV",
+                    data=balanced_csv,
+                    file_name=f"balanced_{base_name}.csv",
+                    mime="text/csv",
+                )
+                br = cln.get("balance_report", {})
+                if br:
+                    st.caption(
+                        f"Balanced on '{br.get('balanced_on')}'. "
+                        f"Original counts: {br.get('original_counts')}"
+                    )
+            else:
+                st.caption("No balancing was applied for this dataset.")
+
 
     # ─────────────────────────────────────────────────────────────────
     # TAB 2 — CHARTS
