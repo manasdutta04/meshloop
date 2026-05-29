@@ -6,4 +6,3 @@ uploads/
 *.env
 .llm_cache.json
 
-plan.txt
