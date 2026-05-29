@@ -5,7 +5,7 @@ from agents.discovery import discover_patterns
 from agents.reporter  import generate_report
 from utils.vector_store import store_dataset, store_insights
 
-def run_pipeline(file_path: str) -> dict:
+def run_pipeline(file_path: str, progress_callback=None) -> dict:
     """
     Run the full Meshloop pipeline on a single file.
     Returns a unified result dict.
@@ -13,22 +13,28 @@ def run_pipeline(file_path: str) -> dict:
     session_id = hashlib.md5(f"{file_path}_{time.time()}".encode()).hexdigest()[:16]
     print(f"\n[Pipeline] Starting | session: {session_id}")
 
+    if progress_callback: progress_callback(20, "📂 Reading and parsing file...")
     print("[1/5] Ingesting...")
     ingestion = ingest_file(file_path)
 
+    if progress_callback: progress_callback(40, "🧹 Cleaning data...")
     print("[2/5] Cleaning...")
     cleaning = clean_data(ingestion)
 
+    if progress_callback: progress_callback(60, "🔍 Discovering hidden patterns...")
     print("[3/5] Discovering patterns...")
     discovery = discover_patterns(cleaning, ingestion)
 
+    if progress_callback: progress_callback(80, "💾 Storing in vector database...")
     print("[4/5] Storing in vector DB...")
     n_chunks = store_dataset(ingestion, cleaning, session_id)
     store_insights(discovery["insights"], session_id)
 
+    if progress_callback: progress_callback(90, "📊 Generating charts and report...")
     print("[5/5] Generating report...")
     report = generate_report(ingestion, cleaning, discovery)
 
+    if progress_callback: progress_callback(100, "✅ Analysis complete!")
     print(f"[Pipeline] [OK] Done — {n_chunks} chunks, {discovery['total_found']} insights")
 
     return {

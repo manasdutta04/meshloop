@@ -7,7 +7,7 @@ import tempfile
 
 # ── Page config — MUST be first Streamlit call ────────────────────────
 st.set_page_config(
-    page_title="Meshloop",
+    page_title="Meshloop — AI Data Insights",
     page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -118,8 +118,10 @@ with st.sidebar:
     st.markdown("3. 💡 Finds hidden patterns")
     st.markdown("4. 💬 Chat with your data")
     st.divider()
-    st.caption("Microsoft Build AI Hackathon 2026")
-    st.caption("Built with: GitHub Models · Semantic Kernel · Streamlit")
+    st.caption("🏆 **Microsoft Build AI Hackathon 2026**")
+    st.caption("🛡️ *Powered by GitHub Models (GPT-4o) + Semantic Kernel*")
+    st.caption("🔗 [GitHub Repository](https://github.com/manasdutta04/meshloop)")
+    st.caption("🌐 [Live Demo](https://datanarator.streamlit.app)")
 
 
 # ── LOADING STATE ─────────────────────────────────────────────────────
@@ -154,13 +156,12 @@ if st.session_state.loading:
                 file_path = tmp.name
             status.text("📂 Reading file...")
         
-        prog.progress(20)
-        status.text("🤖 Running AI agents...")
-        
-        result = run_pipeline(file_path)
-        
-        prog.progress(100)
-        status.text("✅ Done!")
+        # Define progress callback
+        def update_progress(percent, msg):
+            prog.progress(percent)
+            status.text(msg)
+            
+        result = run_pipeline(file_path, progress_callback=update_progress)
         
         st.session_state.result = result
         st.session_state.session_id = result["session_id"]
