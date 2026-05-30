@@ -34,20 +34,23 @@ PHI4 = "microsoft/phi-4"   # Microsoft model — use for simple/fast tasks
 # Simple file-backed cache to survive restarts and conserve rate limits
 CACHE_FILE = Path(".llm_cache.json")
 _cache = {}
+_lock = threading.RLock()
 
-if CACHE_FILE.exists():
-    try:
-        with open(CACHE_FILE, "r", encoding="utf-8") as f:
-            _cache = json.load(f)
-    except Exception:
-        _cache = {}
+with _lock:
+    if CACHE_FILE.exists():
+        try:
+            with open(CACHE_FILE, "r", encoding="utf-8") as f:
+                _cache = json.load(f)
+        except Exception:
+            _cache = {}
 
 def _save_cache():
-    try:
-        with open(CACHE_FILE, "w", encoding="utf-8") as f:
-            json.dump(_cache, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        print(f"Warning: Failed to save LLM cache to disk: {e}")
+    with _lock:
+        try:
+            with open(CACHE_FILE, "w", encoding="utf-8") as f:
+                json.dump(_cache, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Warning: Failed to save LLM cache to disk: {e}")
 
 def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
     """
@@ -59,10 +62,11 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
     model = PHI4 if fast else GPT4O
 
     # Check cache first
-    cache_key = hashlib.md5(f"{model}_{temperature}_{prompt}".encode()).hexdigest()
-    if cache_key in _cache:
-        print(f"[LLM Cache] Hit for {model}")
-        return _cache[cache_key]
+    with _lock:
+        cache_key = hashlib.md5(f"{model}_{temperature}_{prompt}".encode()).hexdigest()
+        if cache_key in _cache:
+            print(f"[LLM Cache] Hit for {model}")
+            return _cache[cache_key]
 
     # Exponential backoff with up to 5 attempts
     for attempt in range(5):
@@ -74,8 +78,9 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
                 max_tokens=1500,
             )
             result = response.choices[0].message.content.strip()
-            _cache[cache_key] = result
-            _save_cache()
+            with _lock:
+                _cache[cache_key] = result
+                _save_cache()
             return result
         except Exception as e:
             error_str = str(e)
@@ -97,8 +102,9 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
     # If we exhausted retries, provide a graceful fallback (avoid raising to keep UI stable)
     fallback_msg = "[LLM unavailable due to rate limits or network errors. Try again later or use smaller datasets.]"
     print("LLM fallback engaged after repeated failures.")
-    _cache[cache_key] = fallback_msg
-    _save_cache()
+    with _lock:
+        _cache[cache_key] = fallback_msg
+        _save_cache()
     return fallback_msg
 
 
@@ -152,15 +158,16 @@ def get_embedding(text: str) -> list[float]:
     text = (text or "")[:8000]
 
     # Check cache first
-    cache_key = hashlib.md5(f"embedding_{text}".encode()).hexdigest()
-    if cache_key in _cache:
-        vec = _cache[cache_key]
-        try:
-            vec = _validate_embedding(vec, text)
-            print("[LLM Cache] Hit for text-embedding-3-small")
-            return vec
-        except ValueError as err:
-            print(f"[LLM Cache] Found invalid embedding: {err}. Recomputing fallback with correct dim={EMBEDDING_DIM}.")
+    with _lock:
+        cache_key = hashlib.md5(f"embedding_{text}".encode()).hexdigest()
+        if cache_key in _cache:
+            vec = _cache[cache_key]
+            try:
+                vec = _validate_embedding(vec, text)
+                print("[LLM Cache] Hit for text-embedding-3-small")
+                return vec
+            except ValueError as err:
+                print(f"[LLM Cache] Found invalid embedding: {err}. Recomputing fallback with correct dim={EMBEDDING_DIM}.")
 
     try:
         if not USE_REMOTE_EMBEDDINGS:
@@ -192,8 +199,9 @@ def get_embedding(text: str) -> list[float]:
             raise RuntimeError("Embedding API returned no result")
 
         result = _validate_embedding(result, text)
-        _cache[cache_key] = result
-        _save_cache()
+        with _lock:
+            _cache[cache_key] = result
+            _save_cache()
         return result
     except Exception as e:
         print(f"Embedding request failed: {e}. Using pseudo-embedding fallback.")
@@ -207,8 +215,9 @@ def get_embedding(text: str) -> list[float]:
             return vec
 
         vec = _pseudo_embedding(text)
-        _cache[cache_key] = vec
-        _save_cache()
+        with _lock:
+            _cache[cache_key] = vec
+            _save_cache()
         return vec
 
 
