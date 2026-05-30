@@ -16,57 +16,181 @@ st.set_page_config(
 
 # ── Custom CSS ───────────────────────────────────────────────────────
 st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* Font overrides */
+html, body, [class*="css"], .stMarkdown {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
 /* Remove top padding */
 .block-container { padding-top: 1rem; }
 
+/* Custom tab styles */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 10px;
+}
+.stTabs [data-baseweb="tab"] {
+    height: 52px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px 10px 0px 0px;
+    padding: 12px 20px;
+    font-weight: 600;
+    color: #475569;
+    transition: all 0.2s ease-in-out;
+}
+.stTabs [aria-selected="true"] {
+    background-color: #1e3a5f !important;
+    border-color: #1e3a5f !important;
+    color: white !important;
+    box-shadow: 0 4px 6px rgba(30, 58, 95, 0.15);
+}
 
-/* Insight card styling */
+/* Top Insight card styling */
 .top-insight-card {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d6a4f 100%);
-    border-radius: 12px;
-    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #1e3a5f 0%, #166534 100%);
+    border-radius: 14px;
+    padding: 1.5rem 1.75rem;
     color: white;
-    margin: 0.75rem 0;
+    margin: 1rem 0;
+    box-shadow: 0 8px 16px rgba(30, 58, 95, 0.12);
 }
 .top-insight-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 0.4rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 .top-insight-desc {
-    font-size: 0.9rem;
-    opacity: 0.9;
+    font-size: 0.95rem;
+    opacity: 0.95;
     line-height: 1.6;
 }
 
+/* Custom cards for findings */
+.insight-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border-left: 5px solid #94a3b8;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+    padding: 1.25rem 1.5rem;
+    margin: 0.8rem 0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-top: 1px solid #f1f5f9;
+    border-right: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+}
+.insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+.insight-card.critical {
+    border-left: 5px solid #ef4444;
+    background: linear-gradient(to right, #fef2f2, #ffffff);
+}
+.insight-card.high {
+    border-left: 5px solid #f97316;
+    background: linear-gradient(to right, #fff7ed, #ffffff);
+}
+.insight-card.medium {
+    border-left: 5px solid #eab308;
+    background: linear-gradient(to right, #fefce8, #ffffff);
+}
+.insight-card.low {
+    border-left: 5px solid #22c55e;
+    background: linear-gradient(to right, #f0fdf4, #ffffff);
+}
 
-/* Chat bubbles */
-.chat-user {
-    background: #f0f2f6;
-    border-radius: 12px 12px 4px 12px;
-    padding: 0.6rem 1rem;
-    margin: 0.3rem 0 0.3rem auto;
+.insight-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.insight-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+.severity-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.25rem 0.60rem;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+}
+.severity-tag.critical { background-color: #fee2e2; color: #991b1b; }
+.severity-tag.high { background-color: #ffedd5; color: #9a3412; }
+.severity-tag.medium { background-color: #fef9c3; color: #854d0e; }
+.severity-tag.low { background-color: #dcfce7; color: #166534; }
+
+.insight-desc {
+    font-size: 0.95rem;
+    color: #475569;
+    line-height: 1.6;
+}
+.insight-evidence {
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed #e2e8f0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* Chat bubble styling */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+}
+.chat-user-msg {
+    align-self: flex-end;
+    background-color: #1e3a5f;
+    color: white;
+    border-radius: 16px 16px 4px 16px;
+    padding: 0.75rem 1.25rem;
     max-width: 80%;
+    box-shadow: 0 4px 6px rgba(30, 58, 95, 0.1);
     font-size: 0.95rem;
 }
-.chat-bot {
-    background: #e8f4fd;
-    border-left: 4px solid #1e6fa8;
-    border-radius: 0 12px 12px 12px;
-    padding: 0.6rem 1rem;
-    margin: 0.3rem 0;
-    max-width: 90%;
+.chat-bot-msg {
+    align-self: flex-start;
+    background-color: #f8fafc;
+    border-left: 4px solid #1e3a5f;
+    border-radius: 4px 16px 16px 16px;
+    padding: 0.75rem 1.25rem;
+    max-width: 85%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    border-top: 1px solid #f1f5f9;
+    border-right: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
     font-size: 0.95rem;
     line-height: 1.6;
+    color: #334155;
 }
-
-
-/* Severity badges */
-.badge-critical { color: #c0392b; font-weight: 600; }
-.badge-high     { color: #d35400; font-weight: 600; }
-.badge-medium   { color: #d4ac0d; font-weight: 600; }
-.badge-low      { color: #27ae60; font-weight: 600; }
+.source-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0.6rem;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 0.4rem;
+}
+.source-badge {
+    background-color: #edf2f7;
+    color: #334155;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -127,8 +251,18 @@ with st.sidebar:
     st.divider()
     st.caption("🏆 **Microsoft Build AI Hackathon 2026**")
     st.caption("🛡️ *Powered by GitHub Models (GPT-4o) + Semantic Kernel*")
-    st.caption("🔗 [GitHub Repository](https://github.com/manasdutta04/meshloop)")
-    st.caption("🌐 [Live Demo](https://datanarator.streamlit.app)")
+    st.markdown(
+        """
+        <div style="display: flex; gap: 5px; flex-wrap: wrap; margin: 8px 0;">
+            <a href="https://github.com/marketplace/models" target="_blank"><img src="https://img.shields.io/badge/GitHub%20Models-GPT--4o%20%2F%20Phi--4-blue?style=flat-square&logo=github&logoColor=white" alt="GitHub Models"></a>
+            <a href="https://github.com/microsoft/semantic-kernel" target="_blank"><img src="https://img.shields.io/badge/Microsoft-Semantic%20Kernel-red?style=flat-square&logo=microsoft&logoColor=white" alt="Semantic Kernel"></a>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.divider()
+    st.markdown("🔗 [GitHub Repository](https://github.com/manasdutta04/meshloop)")
+    st.markdown("🌐 [Live Demo](https://datanarator.streamlit.app)")
 
 
 # ── LOADING STATE ─────────────────────────────────────────────────────
@@ -235,9 +369,12 @@ else:
     ds   = r["data_summary"]
 
 
-    tab_ins, tab_charts, tab_chat, tab_report = st.tabs(
-        ["💡 Insights", "📊 Charts", "💬 Chat", "📋 Report"]
-    )
+    tab_ins, tab_charts, tab_chat, tab_report = st.tabs([
+        "🔍 Root-Cause Discoveries",
+        "📊 Visual Analytics",
+        "💬 Incident Room Chat",
+        "📋 Audit Report"
+    ])
 
     # ─────────────────────────────────────────────────────────────────
     # TAB 1 — INSIGHTS
@@ -266,15 +403,32 @@ else:
                 unsafe_allow_html=True,
             )
         
-        st.markdown(f"#### 💡 All Insights ({disc['total_found']} found)")
-        icons = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
+        st.markdown(f"#### 💡 Discovered Incidents & Findings ({disc['total_found']} found)")
         for i, ins in enumerate(disc.get("insights", [])):
-            icon = icons.get(ins.get("severity", "low"), "⚪")
-            with st.expander(f"{icon} {ins.get('title', f'Insight {i+1}')}"):
-                st.write(ins.get("description", ""))
-                ev = ins.get("data_evidence", {})
-                if ev:
-                    st.caption(f"Evidence: {ev}")
+            sev = ins.get("severity", "low").lower()
+            title = ins.get("title", f"Insight {i+1}")
+            desc = ins.get("description", "")
+            ev = ins.get("data_evidence", {})
+            
+            ev_str = ""
+            if ev:
+                ev_str = f'<div class="insight-evidence"><b>Evidence:</b> {ev}</div>'
+                
+            sev_icon = {"critical": "🚨", "high": "🔴", "medium": "🟡", "low": "🟢"}.get(sev, "⚪")
+            
+            st.markdown(
+                f"""
+                <div class="insight-card {sev}">
+                    <div class="insight-header">
+                        <span class="insight-title">{sev_icon} {title}</span>
+                        <span class="severity-tag {sev}">{sev}</span>
+                    </div>
+                    <div class="insight-desc">{desc}</div>
+                    {ev_str}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
         
         if cln.get("issues_found"):
             st.divider()
@@ -371,20 +525,36 @@ else:
             st.info("Charts are available for tabular data (CSV/Excel/JSON). For PDF/text, see the Insights tab.")
 
 
-    # ─────────────────────────────────────────────────────────────────
-    # TAB 3 — CHAT
-    # ─────────────────────────────────────────────────────────────────
     with tab_chat:
         st.markdown("### 💬 Ask Your Data Anything")
         st.caption(f"Chatting about: **{ds['file_name']}**")
         
+        st.markdown('<div class="chat-container">', unsafe_allow_html=True)
         for msg in st.session_state.chat_history:
             role = msg["role"]
             content = msg["content"]
             if role == "user":
-                st.markdown(f'<div class="chat-user">🧑 {content}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="chat-user-msg">🧑 {content}</div>', unsafe_allow_html=True)
             elif role == "assistant":
-                st.markdown(f'<div class="chat-bot">🤖 {content}</div>', unsafe_allow_html=True)
+                sources_html = ""
+                if msg.get("sources"):
+                    sources = [s for s in msg["sources"] if s]
+                    if sources:
+                        sources_html = '<div class="source-badges">' + "".join(f'<span class="source-badge">📄 {src}</span>' for src in sources) + '</div>'
+                st.markdown(f'<div class="chat-bot-msg">🤖 {content}{sources_html}</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Render follow-up suggestions for the LAST message only
+        if st.session_state.chat_history:
+            last_msg = st.session_state.chat_history[-1]
+            if last_msg["role"] == "assistant" and last_msg.get("suggested_followups"):
+                st.markdown("<div style='margin-top: 10px; font-weight: 600; font-size: 0.9rem; color: #475569;'>💡 Suggested follow-up questions:</div>", unsafe_allow_html=True)
+                cols = st.columns(len(last_msg["suggested_followups"]))
+                for idx, q in enumerate(last_msg["suggested_followups"]):
+                    with cols[idx]:
+                        if st.button(q, key=f"fu_{idx}", use_container_width=True):
+                            _ask(q, ds)
+                            st.rerun()
         
         if not st.session_state.chat_history:
             st.markdown("**Try asking:**")
@@ -441,4 +611,9 @@ def _ask(question: str, data_summary: dict):
     with st.spinner("Thinking..."):
         from agents.chat import answer_question
         resp = answer_question(question, st.session_state.session_id, data_summary)
-    st.session_state.chat_history.append({"role": "assistant", "content": resp["answer"]})
+    st.session_state.chat_history.append({
+        "role": "assistant",
+        "content": resp["answer"],
+        "sources": resp.get("sources", []),
+        "suggested_followups": resp.get("suggested_followups", [])
+    })
