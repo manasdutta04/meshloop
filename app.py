@@ -90,18 +90,25 @@ with st.sidebar:
     
     st.markdown("### Upload Data")
     uploaded = st.file_uploader(
-        "Drop any file here",
-        type=["csv", "xlsx", "pdf", "json", "txt"],
-        help="CSV, Excel, PDF, JSON, or plain text",
+        "Drop one or more files here",
+        type=["csv", "xlsx", "xls", "pdf", "json", "txt", "zip"],
+        accept_multiple_files=True,
+        help="CSV, Excel, PDF, JSON, TXT, or ZIP containing multiple files",
         label_visibility="collapsed",
     )
     
     if uploaded:
-        st.success(f"✅ **{uploaded.name}**")
-        st.caption(f"{uploaded.size / 1024:.1f} KB")
-        
+        if isinstance(uploaded, list):
+            file_names = [f.name for f in uploaded]
+            st.success(f"✅ {len(uploaded)} files selected")
+            st.caption(", ".join(file_names[:3]) + ("..." if len(file_names) > 3 else ""))
+        else:
+            st.success(f"✅ **{uploaded.name}**")
+            st.caption(f"{uploaded.size / 1024:.1f} KB")
+
         if st.button("🚀 Analyze", use_container_width=True, type="primary"):
             st.session_state.loading = True
+            st.session_state._uploaded_files = uploaded
             st.rerun()
     
     # Quick sample button
@@ -135,27 +142,41 @@ if st.session_state.loading:
         
         # Determine file path
         use_sample = getattr(st.session_state, "_use_sample", False)
-        
         if use_sample:
-            file_path = "sample_data/messy_sales.csv"
-            if not os.path.exists(file_path):
+            sample_zip = "sample_data/arca_test_dataset.zip"
+            sample_csv = "sample_data/messy_sales.csv"
+            if os.path.exists(sample_zip):
+                file_path = sample_zip
+            elif os.path.exists(sample_csv):
+                file_path = sample_csv
+            else:
                 st.error("Sample file not found. Please upload a file instead.")
                 st.session_state.loading = False
                 st.rerun()
             status.text("📂 Loading sample data...")
         else:
-            if uploaded is None:
+            uploaded_files = st.session_state.get("_uploaded_files")
+            if not uploaded_files:
                 st.error("Please upload a file first.")
                 st.session_state.loading = False
                 st.rerun()
-            with tempfile.NamedTemporaryFile(
-                delete=False,
-                suffix=f".{uploaded.name.split('.')[-1]}"
-            ) as tmp:
-                tmp.write(uploaded.getvalue())
-                file_path = tmp.name
-            status.text("📂 Reading file...")
-        
+            if not isinstance(uploaded_files, list):
+                uploaded_files = [uploaded_files]
+
+            if len(uploaded_files) == 1 and uploaded_files[0].name.lower().endswith(".zip"):
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".zip") as tmp:
+                    tmp.write(uploaded_files[0].getvalue())
+                    file_path = tmp.name
+            else:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".zip") as tmp_zip:
+                    import zipfile
+                    with zipfile.ZipFile(tmp_zip, mode="w") as zf:
+                        for uf in uploaded_files:
+                            file_bytes = uf.getvalue()
+                            zf.writestr(uf.name, file_bytes)
+                    file_path = tmp_zip.name
+            status.text("📂 Reading uploaded files...")
+
         # Define progress callback
         def update_progress(percent, msg):
             prog.progress(percent)
@@ -176,8 +197,13 @@ if st.session_state.loading:
         st.rerun()
     
     except Exception as e:
-        st.error(f"❌ Analysis failed: {str(e)}")
-        st.caption("Check that your file is not empty and is a supported format.")
+        msg = str(e)
+        if "too many requests" in msg.lower() or "rate limit" in msg.lower():
+            st.error("❌ Analysis failed: LLM rate limits reached. Please try again in a minute or use smaller sample files.")
+            st.caption("Tip: Click 'Try Sample Data' or wait a short while before retrying.")
+        else:
+            st.error(f"❌ Analysis failed: {msg}")
+            st.caption("Check that your file is not empty and is a supported format.")
         st.session_state.loading = False
         if hasattr(st.session_state, "_use_sample"):
             del st.session_state._use_sample
@@ -195,7 +221,7 @@ elif st.session_state.result is None:
     c3.info("**💬 Chat with your data**\nAsk questions in plain English, get specific answers.")
     
     st.markdown("---")
-    st.markdown("**Supported files:** CSV · Excel · PDF · JSON · TXT")
+    st.markdown("**Supported files:** CSV · Excel · PDF · JSON · TXT · ZIP")
     st.markdown("**Powered by:** GitHub Models (GPT-4o) · Microsoft Phi-4 · Semantic Kernel")
 
 
@@ -405,6 +431,7 @@ else:
         st.session_state.result = None
         st.session_state.chat_history = []
         st.session_state.session_id = None
+        st.session_state._uploaded_files = None
         st.rerun()
 
 

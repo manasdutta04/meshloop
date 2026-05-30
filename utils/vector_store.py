@@ -3,11 +3,21 @@ import hashlib
 import pandas as pd
 import numpy as np
 import re
-from utils.llm import get_embedding
+from utils.llm import EMBEDDING_DIM, get_embedding
 
 # In-memory ChromaDB client (resets on app restart — fine for hackathon)
 _chroma = chromadb.Client()
 _collections: dict = {}
+
+def _validate_embeddings(embeds, label: str = 'embedding'):
+    if not isinstance(embeds, list):
+        raise ValueError(f"{label}s must be a list of vectors")
+    for idx, vec in enumerate(embeds):
+        if not isinstance(vec, list) or len(vec) != EMBEDDING_DIM:
+            raise ValueError(
+                f"{label} at index {idx} has invalid length {len(vec) if hasattr(vec, '__len__') else 'NA'}; expected {EMBEDDING_DIM}"
+            )
+
 
 def _get_collection(session_id: str):
     name = f"s_{session_id[:16]}"   # ChromaDB name length limit
@@ -161,6 +171,7 @@ def store_dataset(ingestion_result: dict, cleaned_result: dict, session_id: str)
             })
             
     if docs:
+        _validate_embeddings(embeds, label='Document embedding')
         col.upsert(documents=docs, embeddings=embeds, ids=ids, metadatas=metas)
     return len(docs)
 
@@ -190,6 +201,7 @@ def search(query: str, session_id: str, n: int = 6, filter_dict: dict = None) ->
     """Search vector store. Returns list of dicts: [{'text': doc, 'metadata': meta}]."""
     col = _get_collection(session_id)
     q_embed = get_embedding(query)
+    _validate_embeddings([q_embed], label='Query embedding')
     
     kwargs = {
         "query_embeddings": [q_embed],
