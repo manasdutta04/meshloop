@@ -453,46 +453,51 @@ export default function Home() {
             </div>
 
             {/* Tab view controller */}
-            <div className="flex border-b border-zinc-900 p-0.5 bg-zinc-950 rounded-lg max-w-fit">
+            <div className="flex border-b border-zinc-900 p-0.5 bg-zinc-950 rounded-lg max-w-fit flex-wrap gap-1">
               <button 
                 onClick={() => setActiveTab("discoveries")}
-                className={`text-xs font-semibold px-3.5 py-1.5 rounded transition-colors ${
-                  activeTab === "discoveries" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-500 hover:text-zinc-355"
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
+                  activeTab === "discoveries" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-550 hover:text-zinc-300"
                 }`}
               >
-                🔍 Findings
+                <Search className="w-3.5 h-3.5" />
+                <span>Findings</span>
               </button>
               <button 
                 onClick={() => setActiveTab("visuals")}
-                className={`text-xs font-semibold px-3.5 py-1.5 rounded transition-colors ${
-                  activeTab === "visuals" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-500 hover:text-zinc-355"
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
+                  activeTab === "visuals" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-550 hover:text-zinc-300"
                 }`}
               >
-                📊 Visuals
+                <ChartIcon className="w-3.5 h-3.5" />
+                <span>Visuals</span>
               </button>
               <button 
                 onClick={() => setActiveTab("chat")}
-                className={`text-xs font-semibold px-3.5 py-1.5 rounded transition-colors ${
-                  activeTab === "chat" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-500 hover:text-zinc-355"
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
+                  activeTab === "chat" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-550 hover:text-zinc-300"
                 }`}
               >
-                💬 Ask Assistant
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>Ask Assistant</span>
               </button>
               <button 
                 onClick={() => setActiveTab("report")}
-                className={`text-xs font-semibold px-3.5 py-1.5 rounded transition-colors ${
-                  activeTab === "report" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-500 hover:text-zinc-355"
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
+                  activeTab === "report" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-550 hover:text-zinc-300"
                 }`}
               >
-                📋 Audit Report
+                <FileText className="w-3.5 h-3.5" />
+                <span>Audit Report</span>
               </button>
               <button 
                 onClick={() => setActiveTab("export")}
-                className={`text-xs font-semibold px-3.5 py-1.5 rounded transition-colors ${
-                  activeTab === "export" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-500 hover:text-zinc-355"
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
+                  activeTab === "export" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-550 hover:text-zinc-300"
                 }`}
               >
-                💾 Exports
+                <Download className="w-3.5 h-3.5" />
+                <span>Exports</span>
               </button>
             </div>
 
