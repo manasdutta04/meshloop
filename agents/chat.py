@@ -1,14 +1,14 @@
 import json
 from utils.vector_store import search
-from utils.llm import call_llm, call_llm_json
+from utils.llm import call_llm
 
 def answer_question(question: str, session_id: str, data_summary: dict) -> dict:
-    # 1. Retrieve relevant context
-    chunks = search(question, session_id, n=6)
+    # 1. Retrieve relevant context (returns a list of {'text': doc, 'metadata': meta})
+    results = search(question, session_id, n=6)
     
-    if not chunks:
+    if not results:
         return {
-            "answer": "No data has been analyzed yet. Please upload and process a file first.",
+            "answer": "No data has been analyzed yet. Please upload and process a ZIP or file first.",
             "sources": [],
             "suggested_followups": [
                 "What patterns are in the data?",
@@ -17,16 +17,26 @@ def answer_question(question: str, session_id: str, data_summary: dict) -> dict:
             ],
         }
 
-    context = "\n\n".join(f"[Chunk {i+1}]: {c}" for i, c in enumerate(chunks))
+    # Format the context text and extract filenames for citations
+    context_lines = []
+    sources = set()
+    for i, res in enumerate(results):
+        txt = res["text"]
+        meta = res["metadata"]
+        fname = meta.get("file", "unknown")
+        sources.add(fname)
+        context_lines.append(f"[Chunk {i+1} from '{fname}']: {txt}")
+        
+    context = "\n\n".join(context_lines)
 
     # 2. Answer with GPT-4o (via GitHub Models)
-    prompt = f"""You are Meshloop, an AI data analyst.
+    prompt = f"""You are Meshloop, an AI forensic data analyst.
 A user uploaded a dataset and is asking questions about it.
 
 Dataset info:
-- File: {data_summary.get('file_name', 'unknown')}
-- Rows: {data_summary.get('row_count', '?')}
-- Columns: {data_summary.get('column_names', [])}
+- Files Processed: {data_summary.get('file_names', [data_summary.get('file_name', 'unknown')])}
+- Rows Analyzed: {data_summary.get('row_count', '?')}
+- Columns Available: {data_summary.get('column_names', [])}
 
 Retrieved data context:
 {context}
@@ -35,7 +45,7 @@ User question: {question}
 
 Instructions:
 - Answer ONLY based on the context provided above.
-- Be specific — cite column names and numbers.
+- Be specific — cite column names, values, and source files (e.g. `[server_log.txt]`).
 - If the data is insufficient to answer, say so clearly.
 - Keep the answer concise (3-5 sentences max).
 - End with: "💡 Action: [one specific thing the user should do based on this finding]"
@@ -71,6 +81,6 @@ Respond ONLY with a JSON array: ["question 1", "question 2", "question 3"]"""
 
     return {
         "answer": answer,
-        "sources": chunks[:3],
+        "sources": list(sources),
         "suggested_followups": followups[:3],
     }

@@ -1,35 +1,98 @@
 """
-INGESTION AGENT
-─────────────────
+INGESTION AGENT (ARCA Pivot)
+─────────────────────────────
 Input : file_path (str)
 Output: dict with keys:
-  - raw_text       : str   — all text content from the file
-  - dataframe      : pd.DataFrame or None
-  - file_type      : str   ('csv', 'xlsx', 'pdf', 'json', 'txt')
-  - row_count      : int
-  - column_names   : list[str]
-  - sample_rows    : list[dict]  (first 5 rows)
-  - metadata       : dict  (file_name, file_size_bytes, etc.)
+  - dataframes     : dict[str, pd.DataFrame] — clean pandas dataframes (CSV/Excel/JSON list)
+  - corpora        : dict[str, str]          — clean text mappings (PDF/TXT/JSON dict/MD)
+  - metadata       : dict                    — containing list of files, sizes, types
 """
 
 import pandas as pd
 import fitz   # PyMuPDF — for PDFs
 import json
 import os
+import tempfile
+import zipfile
 from pathlib import Path
 
 
 def ingest_file(file_path: str) -> dict:
     """
     Main entry point.
-    Detects file type by extension and routes to the right parser.
-    Raises ValueError for unsupported types.
+    Detects if the file is a ZIP archive, or routes a single file directly.
     """
     path = Path(file_path)
     ext = path.suffix.lower().lstrip(".")
     
+    if ext == "zip":
+        dataframes = {}
+        corpora = {}
+        files_contained = []
+        
+        # Create a temp directory to extract zip contents
+        temp_dir = tempfile.mkdtemp()
+        try:
+            with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                zip_ref.extractall(temp_dir)
+                
+            for root, _, files in os.walk(temp_dir):
+                for file in files:
+                    if file.startswith(".") or file.startswith("__"):
+                        continue
+                    fpath = os.path.join(root, file)
+                    name = file
+                    fext = Path(fpath).suffix.lower().lstrip(".")
+                    
+                    try:
+                        res = _parse_single_file(fpath, fext, name)
+                        if res["dataframe"] is not None:
+                            dataframes[name] = res["dataframe"]
+                        else:
+                            corpora[name] = res["raw_text"]
+                        files_contained.append(name)
+                    except Exception as e:
+                        print(f"Warning: Failed to parse file {name} inside ZIP: {e}")
+        finally:
+            # Note: We keep files in temp_dir or let garbage collection handle it.
+            # But the parsed dataframes/text are already copied into memory.
+            pass
+            
+        return {
+            "dataframes": dataframes,
+            "corpora": corpora,
+            "metadata": {
+                "file_name": path.name,
+                "file_size_bytes": os.path.getsize(file_path),
+                "file_type": "zip",
+                "files_contained": files_contained
+            }
+        }
+    else:
+        # Single file ingestion
+        res = _parse_single_file(file_path, ext, path.name)
+        dataframes = {}
+        corpora = {}
+        if res["dataframe"] is not None:
+            dataframes[path.name] = res["dataframe"]
+        else:
+            corpora[path.name] = res["raw_text"]
+            
+        return {
+            "dataframes": dataframes,
+            "corpora": corpora,
+            "metadata": {
+                "file_name": path.name,
+                "file_size_bytes": os.path.getsize(file_path),
+                "file_type": ext,
+                "files_contained": [path.name]
+            }
+        }
+
+
+def _parse_single_file(file_path: str, ext: str, name: str) -> dict:
     base_meta = {
-        "file_name": path.name,
+        "file_name": name,
         "file_size_bytes": os.path.getsize(file_path),
         "file_type": ext,
     }
@@ -156,5 +219,6 @@ if __name__ == "__main__":
         print("Usage: python agents/ingestion.py <file_path>")
         sys.exit(1)
     result = ingest_file(sys.argv[1])
-    print(f"SUCCESS: Ingested: {result['file_type']} | {result['row_count']} rows | columns: {result['column_names']}")
-    print(f"Text preview: {result['raw_text'][:300]}")
+    print(f"SUCCESS: Ingested metadata: {result['metadata']}")
+    print(f"Dataframes: {list(result['dataframes'].keys())}")
+    print(f"Corpora: {list(result['corpora'].keys())}")

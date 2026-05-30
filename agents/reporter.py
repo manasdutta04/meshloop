@@ -1,45 +1,56 @@
 import pandas as pd
 import numpy as np
 
-def generate_report(ingestion_result, cleaned_result, discovery_result) -> dict:
-    df       = cleaned_result.get("cleaned_df")
-    insights = discovery_result.get("insights", [])
-    summary  = discovery_result.get("summary", "")
-    fname    = ingestion_result["metadata"]["file_name"]
-
-    sev_icon = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
-
+def generate_report(ingestion_result: dict, cleaned_result: dict, discovery_result: dict) -> dict:
+    """Generates a markdown Forensic Audit Report and maps out chart configurations."""
+    cleaned_dfs = cleaned_result.get("cleaned_dfs", {})
+    insights    = discovery_result.get("insights", [])
+    summary     = discovery_result.get("summary", "")
+    metadata    = ingestion_result.get("metadata", {})
+    fname       = metadata.get("file_name", "unknown")
+    files_list  = metadata.get("files_contained", [fname])
+    
+    sev_icon = {"critical": "🚨", "high": "🔴", "medium": "🟠", "low": "🟢"}
+    
+    # Calculate row count
+    row_count = 0
+    for df in cleaned_dfs.values():
+        row_count += len(df)
+        
     lines = [
-        f"# Meshloop Report: `{fname}`", "",
+        f"# Meshloop Forensic Audit Report: `{fname}`", "",
         "## Executive Summary", summary, "",
-        "## Data Overview",
-        f"- **File:** {fname}",
-        f"- **Rows processed:** {ingestion_result['row_count']:,}",
-        f"- **Columns:** {', '.join(ingestion_result['column_names'][:10])}",
-        f"- **Issues cleaned:** {len(cleaned_result.get('issues_found', []))}",
-        f"- **Insights discovered:** {len(insights)}", "",
-        "## Insights",
+        "## Data & Incident Overview",
+        f"- **Upload Source:** {fname}",
+        f"- **Files Ingested:** {', '.join(f'`{f}`' for f in files_list)}",
+        f"- **Total Rows Processed:** {row_count:,}",
+        f"- **Data Quality Fixes Applied:** {len(cleaned_result.get('issues_found', []))}",
+        f"- **Forensic Incidents Discovered:** {len(insights)}", "",
+        "## Critical Incidents & Insights", ""
     ]
-
+    
     for i, ins in enumerate(insights, 1):
         icon = sev_icon.get(ins.get("severity", "low"), "⚪")
         lines += [
             f"### {icon} {i}. {ins.get('title', '')}",
             ins.get("description", ""),
-            f"*Evidence: {ins.get('data_evidence', {})}*", "",
+            f"*Evidence: {ins.get('data_evidence', {})}*", ""
         ]
-
+        
     if cleaned_result.get("issues_found"):
-        lines += ["## Data Quality Fixes", ""]
+        lines += ["## Data Quality Fixes Applied", ""]
         for fix in cleaned_result["issues_found"]:
-            lines.append(f"- [OK] {fix}") # Replaced emoji with text for safety
-
+            lines.append(f"- ✅ {fix}")
+            
     report_text = "\n".join(lines)
-    chart_specs = _build_chart_specs(df, insights)
-
+    
+    # Build chart specs for the first active dataframe
+    first_df = next(iter(cleaned_dfs.values())) if cleaned_dfs else None
+    chart_specs = _build_chart_specs(first_df, insights)
+    
     return {"report_text": report_text, "chart_specs": chart_specs}
 
-def _build_chart_specs(df, insights: list) -> list:
+def _build_chart_specs(df: pd.DataFrame, insights: list) -> list:
     if df is None or len(df) == 0:
         return []
     
@@ -65,7 +76,7 @@ def _build_chart_specs(df, insights: list) -> list:
                         best_r, ca, cb = v, c1, c2
             specs.append({"type": "scatter", "x": ca, "y": cb,
                           "title": f"{ca} vs {cb}",
-                          "corr": round(float(best_r), 3)})
+                          "corr": round(best_r, 3)})
         except Exception:
             pass
     if date_cols and num_cols:

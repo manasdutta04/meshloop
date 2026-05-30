@@ -3,10 +3,41 @@ import numpy as np
 import re
 
 def clean_data(ingestion_result: dict) -> dict:
-    """Routes to tabular or text cleaning based on data type."""
-    if ingestion_result.get("dataframe") is not None:
-        return _clean_tabular(ingestion_result)
-    return _clean_text(ingestion_result)
+    """Iterates through and cleans all dataframes and unstructured texts in the ingestion result."""
+    cleaned_dfs = {}
+    balanced_dfs = {}
+    cleaned_corpora = {}
+    issues_found = []
+    cleaning_reports = {}
+    
+    # 1. Clean dataframes
+    for name, df in ingestion_result.get("dataframes", {}).items():
+        mock_ing = {"dataframe": df}
+        res = _clean_tabular(mock_ing)
+        cleaned_dfs[name] = res["cleaned_df"]
+        if res.get("balanced_df") is not None:
+            balanced_dfs[name] = res["balanced_df"]
+        
+        for issue in res["issues_found"]:
+            issues_found.append(f"[{name}] {issue}")
+        cleaning_reports[name] = res["cleaning_report"]
+        
+    # 2. Clean corpora (text files)
+    for name, text in ingestion_result.get("corpora", {}).items():
+        mock_ing = {"raw_text": text}
+        res = _clean_text(mock_ing)
+        cleaned_corpora[name] = res["clean_text"]
+        for issue in res["issues_found"]:
+            issues_found.append(f"[{name}] {issue}")
+        cleaning_reports[name] = res["cleaning_report"]
+        
+    return {
+        "cleaned_dfs": cleaned_dfs,
+        "balanced_dfs": balanced_dfs,
+        "cleaned_corpora": cleaned_corpora,
+        "issues_found": issues_found,
+        "cleaning_reports": cleaning_reports
+    }
 
 def _clean_tabular(ingestion_result: dict) -> dict:
     df = ingestion_result["dataframe"].copy()
@@ -30,7 +61,6 @@ def _clean_tabular(ingestion_result: dict) -> dict:
         # Date columns
         if any(kw in col_lower for kw in ["date", "time", "created", "updated", "timestamp", "dt"]):
             try:
-                # Use format="mixed" or similar if infer_datetime_format is not available in pandas 2.2.2+
                 df[col] = pd.to_datetime(df[col], errors="coerce")
                 type_fixes[col] = "-> datetime"
             except Exception:
@@ -108,7 +138,6 @@ def _clean_tabular(ingestion_result: dict) -> dict:
         "cleaning_report": report,
     }
 
-
 def _balance_tabular(df: pd.DataFrame) -> dict:
     if df is None or len(df) == 0:
         return {"balanced_df": None, "balance_report": {}}
@@ -154,7 +183,6 @@ def _balance_tabular(df: pd.DataFrame) -> dict:
         },
     }
 
-
 def _clean_text(ingestion_result: dict) -> dict:
     raw = ingestion_result.get("raw_text", "")
     issues = []
@@ -175,13 +203,3 @@ def _clean_text(ingestion_result: dict) -> dict:
         "issues_found": issues,
         "cleaning_report": {"chars_before": len(raw), "chars_after": len(clean)},
     }
-
-if __name__ == "__main__":
-    from agents.ingestion import ingest_file
-    import sys
-    if len(sys.argv) < 2:
-        print("Usage: python agents/cleaning.py <file_path>")
-        sys.exit(1)
-    r = ingest_file(sys.argv[1])
-    c = clean_data(r)
-    print(f"[OK] Cleaned: {c['cleaning_report']['rows_after']} rows | Fixes: {c['cleaning_report']['total_fixes']}")

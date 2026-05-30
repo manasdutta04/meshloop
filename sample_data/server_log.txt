@@ -1,0 +1,7 @@
+Incident log report for Q2 2026.
+
+2026-05-10 - North Region: Normal operations, slight load increase due to promotion.
+
+2026-05-12 - East Region: Local server database gateway West-Gateway-04 crashed at 14:00 UTC and remained unresponsive for 4 hours, causing checkouts to timeout. The database connection pool was completely exhausted, resulting in zero conversions. Incident was resolved by database team at 18:00 UTC.
+
+2026-05-15 - West Region: Minor network latency observed, resolved in 10 minutes.

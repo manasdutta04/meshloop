@@ -1,44 +1,93 @@
 import pandas as pd
 import numpy as np
+import re
 from utils.llm import call_llm, call_llm_json
 
-def discover_patterns(cleaned_result: dict, ingestion_result: dict) -> dict:
-    df = cleaned_result.get("cleaned_df")
-    text = cleaned_result.get("clean_text", "")
-    file_name = ingestion_result["metadata"]["file_name"]
-
-    if df is not None and len(df) > 0:
-        stat_insights = _run_statistical_checks(df)
-        llm_insights  = _run_llm_discovery(df, stat_insights, file_name)
-    else:
-        stat_insights = []
-        llm_insights  = _run_text_discovery(text, file_name)
-
-    all_insights = stat_insights + llm_insights
-
+def discover_patterns(cleaned_result: dict, ingestion_result: dict, session_id: str = "temp") -> dict:
+    """
+    Main discovery entry point for ARCA.
+    1. Runs statistical anomaly checks on tabular data.
+    2. Searches ChromaDB for matching date/region text logs.
+    3. Runs GPT-4o to correlate logs and explain root causes.
+    """
+    from utils.vector_store import search
+    
+    all_insights = []
+    
+    # 1. Run statistical checks on each cleaned dataframe
+    stat_anomalies = []
+    for filename, df in cleaned_result.get("cleaned_dfs", {}).items():
+        anomalies = _run_statistical_checks(df, filename)
+        stat_anomalies.extend(anomalies)
+        
+    # 2. Explainer Agent Loop: cross-reference anomalies with unstructured logs
+    for anomaly in stat_anomalies:
+        if anomaly["type"] == "anomaly" and "date" in anomaly["data_evidence"]:
+            date = anomaly["data_evidence"]["date"]
+            region = anomaly["data_evidence"].get("region", "unknown")
+            
+            # Query vector store for logs containing this date and region keywords
+            query = f"{date} {region} outage issue crash failure ticket delay"
+            
+            # Retrieve matching text chunks from ChromaDB (type: log)
+            filter_dict = {"type": "log"}
+            search_results = search(query, session_id, n=4, filter_dict=filter_dict)
+            text_chunks = [res["text"] for res in search_results]
+            
+            # Query GPT-4o to correlate metrics drop with the logs
+            rc_insight = _query_root_cause_explanation(anomaly, text_chunks)
+            if rc_insight:
+                all_insights.append(rc_insight)
+            else:
+                all_insights.append(anomaly)
+        else:
+            all_insights.append(anomaly)
+            
+    # 3. LLM pattern discovery on dataframe profiles
+    for filename, df in cleaned_result.get("cleaned_dfs", {}).items():
+        existing_titles = [i["title"] for i in all_insights]
+        llm_insights = _run_llm_discovery(df, existing_titles, filename)
+        all_insights.extend(llm_insights)
+        
+    # 4. If no dataframes exist, run unstructured text discovery
+    if not cleaned_result.get("cleaned_dfs"):
+        for filename, text in cleaned_result.get("cleaned_corpora", {}).items():
+            txt_insights = _run_text_discovery(text, filename)
+            all_insights.extend(txt_insights)
+            
     # Sort by severity
     order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
     all_insights.sort(key=lambda x: order.get(x.get("severity", "low"), 3))
-
+    
     top = all_insights[0] if all_insights else {}
-    summary = _make_summary(all_insights, file_name)
-
+    
+    summary = _make_summary(all_insights, ingestion_result.get("metadata", {}).get("file_name", "Uploaded Files"))
+    
     return {
         "insights": all_insights,
         "top_insight": top,
         "summary": summary,
-        "anomalies": [i for i in all_insights if i.get("type") == "anomaly"],
+        "anomalies": [i for i in all_insights if i.get("type") in ["anomaly", "root_cause_anomaly"]],
         "total_found": len(all_insights),
     }
 
-def _run_statistical_checks(df: pd.DataFrame) -> list:
-    """Pure statistics — fast, no LLM tokens used."""
+def _run_statistical_checks(df: pd.DataFrame, filename: str) -> list:
     findings = []
     num_cols  = df.select_dtypes(include=np.number).columns.tolist()
     cat_cols  = df.select_dtypes(include="object").columns.tolist()
     date_cols = df.select_dtypes(include=["datetime64"]).columns.tolist()
+    
+    # Locate date and region columns
+    date_col = None
+    region_col = None
+    for colname in df.columns:
+        col_lower = colname.lower()
+        if any(kw in col_lower for kw in ["date", "time", "created", "timestamp", "dt"]):
+            date_col = colname
+        if any(kw in col_lower for kw in ["region", "location", "country", "state", "city", "zone"]):
+            region_col = colname
 
-    # 1. Outliers (IQR method)
+    # 1. Outliers (IQR)
     for col in num_cols:
         s = df[col].dropna()
         if len(s) < 10:
@@ -52,126 +101,121 @@ def _run_statistical_checks(df: pd.DataFrame) -> list:
             findings.append({
                 "type": "anomaly",
                 "severity": "high" if len(outliers) > 5 else "medium",
-                "title": f"Extreme outliers detected in '{col}'",
-                "description": (
-                    f"{len(outliers)} values in '{col}' are extreme outliers "
-                    f"(beyond 3× IQR). Normal range: {Q1-3*IQR:.2f} to {Q3+3*IQR:.2f}. "
-                    f"Outlier examples: {outliers.values[:3].tolist()}. "
-                    f"These may indicate data entry errors or genuinely unusual events."
-                ),
+                "title": f"Extreme outliers in '{col}' ({filename})",
+                "description": f"In file '{filename}', we detected {len(outliers)} extreme outliers in '{col}'. Normal range: {Q1-3*IQR:.2f} to {Q3+3*IQR:.2f}. Outliers: {outliers.values[:3].tolist()}.",
                 "data_evidence": {
+                    "file": filename,
                     "column": col,
                     "outlier_count": len(outliers),
                     "examples": outliers.values[:5].tolist(),
-                    "normal_range": [round(float(Q1-3*IQR), 2), round(float(Q3+3*IQR), 2)],
-                },
+                    "normal_range": [round(float(Q1-3*IQR), 2), round(float(Q3+3*IQR), 2)]
+                }
             })
 
-    # 2. Strong correlations (r > 0.7)
-    if len(num_cols) >= 2:
-        corr = df[num_cols].corr()
-        for i, c1 in enumerate(num_cols):
-            for c2 in num_cols[i+1:]:
-                r = corr.loc[c1, c2]
-                if pd.isna(r) or abs(r) <= 0.70:
+    # 2. Chronological Drops (anomalies on specific dates/regions)
+    if date_col and num_cols:
+        for ncol in num_cols:
+            try:
+                group_cols = [date_col]
+                if region_col:
+                    group_cols.append(region_col)
+                
+                # Daily average
+                daily = df.groupby(group_cols)[ncol].mean().reset_index()
+                daily[date_col] = pd.to_datetime(daily[date_col])
+                daily = daily.sort_values(date_col)
+                
+                if len(daily) < 5:
                     continue
-                direction = "positively" if r > 0 else "negatively"
-                findings.append({
-                    "type": "correlation",
-                    "severity": "high" if abs(r) > 0.85 else "medium",
-                    "title": f"Strong link between '{c1}' and '{c2}'",
-                    "description": (
-                        f"'{c1}' and '{c2}' are strongly {direction} correlated "
-                        f"(r = {r:.2f}). When '{c1}' increases, '{c2}' reliably "
-                        f"{'increases' if r > 0 else 'decreases'} as well."
-                    ),
-                    "data_evidence": {"col1": c1, "col2": c2, "r": round(float(r), 3)},
-                })
-
-    # 3. Category dominance
-    for col in cat_cols:
-        vc = df[col].value_counts(normalize=True)
-        if len(vc) >= 2 and vc.iloc[0] > 0.60:
-            findings.append({
-                "type": "distribution",
-                "severity": "medium",
-                "title": f"'{col}' is dominated by one value",
-                "description": (
-                    f"'{vc.index[0]}' accounts for {vc.iloc[0]*100:.1f}% of all "
-                    f"entries in '{col}'. This heavy concentration may indicate "
-                    f"a sampling bias or a real business pattern worth investigating."
-                ),
-                "data_evidence": {
-                    "column": col,
-                    "dominant_value": str(vc.index[0]),
-                    "pct": round(float(vc.iloc[0]*100), 1),
-                },
-            })
-
-    # 4. Time trend
-    if date_cols and num_cols:
-        dcol, ncol = date_cols[0], num_cols[0]
-        try:
-            sub = df[[dcol, ncol]].dropna().sort_values(dcol)
-            mid = len(sub) // 2
-            avg1 = sub[ncol].iloc[:mid].mean()
-            avg2 = sub[ncol].iloc[mid:].mean()
-            if avg1 != 0:
-                chg = (avg2 - avg1) / abs(avg1) * 100
-                if abs(chg) > 20:
-                    word = "increased" if chg > 0 else "decreased"
-                    findings.append({
-                        "type": "trend",
-                        "severity": "high",
-                        "title": f"'{ncol}' has {word} significantly over time",
-                        "description": (
-                            f"'{ncol}' {word} by {abs(chg):.1f}% comparing "
-                            f"the first and second halves of the time period. "
-                            f"Average went from {avg1:.2f} to {avg2:.2f}."
-                        ),
-                        "data_evidence": {
-                            "column": ncol,
-                            "change_pct": round(float(chg), 1),
-                            "first_half_avg": round(float(avg1), 2),
-                            "second_half_avg": round(float(avg2), 2),
-                        },
-                    })
-        except Exception:
-            pass
-
-    # 5. Missing data flags
-    null_pcts = df.isnull().mean() * 100
-    bad_cols = null_pcts[null_pcts > 10]
-    if len(bad_cols) > 0:
-        findings.append({
-            "type": "data_quality",
-            "severity": "medium",
-            "title": f"{len(bad_cols)} columns have >10% missing data",
-            "description": (
-                f"Columns with significant missing values: "
-                f"{', '.join(f'{c} ({v:.1f}%)' for c, v in bad_cols.items())}. "
-                f"This could affect the reliability of any analysis."
-            ),
-            "data_evidence": {"missing_columns": bad_cols.round(1).to_dict()},
-        })
-
+                
+                # Calculate rolling median (past 7 items)
+                rolling_median = daily[ncol].rolling(7, min_periods=3).median()
+                
+                for idx, row in daily.iterrows():
+                    val = row[ncol]
+                    med = rolling_median.loc[idx]
+                    if pd.isna(med) or med == 0:
+                        continue
+                    
+                    drop_pct = (med - val) / med * 100
+                    if drop_pct > 30: # 30%+ drop is considered a business anomaly
+                        date_str = row[date_col].strftime("%Y-%m-%d")
+                        region_val = str(row[region_col]) if region_col else "unknown"
+                        
+                        findings.append({
+                            "type": "anomaly",
+                            "severity": "high",
+                            "title": f"Metric drop in '{ncol}' on {date_str} in '{region_val}'",
+                            "description": f"In '{filename}', the metric '{ncol}' dropped by {drop_pct:.0f}% to {val:.2f} on {date_str} (median: {med:.2f}) in region '{region_val}'.",
+                            "data_evidence": {
+                                "file": filename,
+                                "column": ncol,
+                                "date": date_str,
+                                "region": region_val.title() if region_val != "unknown" else "unknown",
+                                "drop_pct": round(drop_pct, 1),
+                                "actual_value": round(val, 2),
+                                "expected_value": round(med, 2)
+                            }
+                        })
+            except Exception as e:
+                print(f"Error checking chronological drops: {e}")
+                
     return findings
 
-def _run_llm_discovery(df: pd.DataFrame, stat_insights: list, file_name: str) -> list:
-    """
-    Ask GPT-4o to look at the data profile and find 2-3 business patterns
-    that the statistical checks would not catch.
-    """
+def _query_root_cause_explanation(anomaly: dict, text_chunks: list) -> dict:
+    """Uses GPT-4o to read text log context and determine if it explains the metric anomaly."""
+    if not text_chunks:
+        return None
+        
+    context = "\n\n".join(f"[Log Chunk {i+1}]: {c}" for i, c in enumerate(text_chunks))
+    
+    prompt = f"""You are a senior forensic data analyst.
+We detected a business anomaly in our structured metrics:
+- Anomaly: {anomaly['description']}
+- Date: {anomaly['data_evidence'].get('date')}
+- Region: {anomaly['data_evidence'].get('region')}
+
+We retrieved the following unstructured logs/reports from that same timeframe/location:
+{context}
+
+Your task:
+1. Determine if any of the retrieved logs logically explain the cause of this metric drop.
+2. If yes, write a clear, actionable explanation of the root cause linking the numerical drop to the text event. CITE the specific log files or sources mentioned in the log chunks.
+3. If no logical connection exists, say so.
+
+Respond ONLY with valid JSON in this format:
+{{
+  "has_root_cause": true,
+  "explanation": "2-3 sentences explaining the link with numbers and citing log source files.",
+  "title": "Short title under 12 words",
+  "severity": "critical"
+}}"""
+
+    try:
+        res = call_llm_json(prompt)
+        if res.get("has_root_cause"):
+            return {
+                "type": "root_cause_anomaly",
+                "severity": res.get("severity", "high"),
+                "title": res.get("title", "Root Cause: " + anomaly["title"]),
+                "description": res.get("explanation"),
+                "data_evidence": anomaly["data_evidence"]
+            }
+    except Exception as e:
+        print(f"Error querying root cause: {e}")
+    return None
+
+def _run_llm_discovery(df: pd.DataFrame, existing: list, file_name: str) -> list:
+    """Ask GPT-4o to look at the data profile and find business patterns."""
     num_summary = (
         df.describe().round(2).to_string()
         if len(df.select_dtypes(include=np.number).columns) > 0
         else "No numeric columns."
     )
     sample_str = df.head(8).to_string()
-    existing = [i["title"] for i in stat_insights]
 
-    prompt = f"""You are a senior business data analyst.
-Analyze this dataset profile and find 2-3 non-obvious, ACTIONABLE business insights.
+    prompt = f"""You are a senior data analyst.
+Analyze this dataset profile and find 1-2 actionable business insights.
 
 File: {file_name}
 Columns: {df.columns.tolist()}
@@ -185,40 +229,31 @@ Statistical summary:
 
 ALREADY FOUND — DO NOT REPEAT: {existing}
 
-Your task: Find patterns a business consultant would flag as important.
-Think about: unusual concentrations, unexpected absences, cross-column relationships, business risk signals.
-
 Respond ONLY with valid JSON in this exact format:
 {{
   "insights": [
     {{
       "type": "pattern",
-      "severity": "high",
+      "severity": "medium",
       "title": "Short title under 12 words",
-      "description": "2-3 sentences. Be specific with numbers. Explain the business implication.",
-      "data_evidence": {{"detail": "specific reference to columns or values"}}
+      "description": "2-3 sentences. Be specific. Explain the business implication.",
+      "data_evidence": {{"detail": "reference to columns or values"}}
     }}
   ]
-}}
-
-Return 1 to 3 insights only. Only include real patterns visible in the data above."""
+}}"""
 
     try:
         result = call_llm_json(prompt)
         return result.get("insights", [])
     except Exception as e:
-        print(f"LLM discovery failed (non-fatal): {e}")
+        print(f"LLM discovery failed: {e}")
         return []
 
 def _run_text_discovery(text: str, file_name: str) -> list:
-    """For PDF/text files — find patterns in unstructured content."""
-    prompt = f"""Analyze this document and find 3-5 non-obvious insights or patterns.
+    prompt = f"""Analyze this document and find 1-2 non-obvious insights or patterns.
 
 Document ({file_name}) preview:
 {text[:6000]}
-
-Look for: contradictions, unusual patterns, key entities and relationships,
-implied trends, suspicious gaps, or anything a business analyst would flag.
 
 Respond ONLY with valid JSON:
 {{
@@ -237,7 +272,7 @@ Respond ONLY with valid JSON:
         result = call_llm_json(prompt)
         return result.get("insights", [])
     except Exception as e:
-        print(f"Text discovery failed (non-fatal): {e}")
+        print(f"Text discovery failed: {e}")
         return []
 
 def _make_summary(insights: list, file_name: str) -> str:
@@ -246,25 +281,10 @@ def _make_summary(insights: list, file_name: str) -> str:
     titles = [i["title"] for i in insights[:4]]
     prompt = (
         f"Write a 2-sentence executive summary for a business audience "
-        f"about these findings in '{file_name}':\n{titles}\n"
-        f"Be specific. Start with the most important finding."
+        f"about these forensic findings in '{file_name}':\n{titles}\n"
+        f"Be specific. Start with the most critical incident."
     )
-    # Using call_llm directly might fail without API key, but we'll assume it works when called in pipeline
     try:
         return call_llm(prompt, fast=True)
     except Exception:
-        return f"Discovered {len(insights)} patterns in {file_name}."
-
-if __name__ == "__main__":
-    from agents.ingestion import ingest_file
-    from agents.cleaning import clean_data
-    import sys
-    if len(sys.argv) < 2:
-        print("Usage: python agents/discovery.py <file_path>")
-        sys.exit(1)
-    ing = ingest_file(sys.argv[1])
-    cln = clean_data(ing)
-    result = discover_patterns(cln, ing)
-    print(f"\n[OK] Found {result['total_found']} insights")
-    print(f"\nTOP: {result['top_insight'].get('title')}")
-    print(f"     {result['top_insight'].get('description', '')[:200]}")
+        return f"Discovered {len(insights)} forensic incidents in {file_name}."
