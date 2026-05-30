@@ -5,8 +5,8 @@ Built for **Microsoft Build AI Hackathon 2026** | Theme 04: AI Meets Data (From 
 
 [![GitHub Models](https://img.shields.io/badge/GitHub%20Models-GPT--4o%20%2F%20Phi--4-blue?style=flat-square&logo=github&logoColor=white)](https://github.com/marketplace/models)
 [![Semantic Kernel](https://img.shields.io/badge/Microsoft-Semantic%20Kernel-red?style=flat-square&logo=microsoft&logoColor=white)](https://github.com/microsoft/semantic-kernel)
-[![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector%20Store-orange?style=flat-square)](https://github.com/chroma-core/chroma)
-[![Streamlit](https://img.shields.io/badge/Streamlit-UI%20Dashboard-red?style=flat-square&logo=streamlit)](https://streamlit.io)
+[![FastAPI](https://img.shields.io/badge/FastAPI-REST%20API-emerald?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Next.js](https://img.shields.io/badge/Next.js-React%20Frontend-black?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
 
 ---
 
@@ -16,7 +16,7 @@ Enterprise monitoring tools (like PowerBI, Datadog, or Grafana) excel at showing
 
 **Meshloop ARCA** bridges this gap:
 1.  **Tabular Outlier & Trend Check**: Autonomously parses and cleans metric spreadsheets (CSV/Excel), checking for extreme numerical outliers (IQR) or chronological drops (e.g. >30% metric dips).
-2.  **Semantic Metadata Binding**: Index and tag document paragraphs in ChromaDB with metadata keying on specific `date` and `region` attributes.
+2.  **Semantic Metadata Binding**: Indexes and tags document paragraphs in ChromaDB with metadata keying on specific `date` and `region` attributes.
 3.  **Cross-Modal Root-Cause Linking**: Queries matching log chunks for any detected numerical anomalies on those exact dates/regions.
 4.  **GPT-4o Forensics**: Synthesizes the exact root cause, citing specific files and returning it in a gorgeous visual incident card interface.
 
@@ -63,7 +63,10 @@ Raw Data Files (CSV/Excel spreadsheet metrics + PDF/JSON/TXT text logs)
 └───────────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
-         Streamlit UI Dashboard (with custom premium theme)
+                        FastAPI REST API
+                                │
+                                ▼
+              Next.js Premium React Web Application
 ```
 
 ---
@@ -80,36 +83,62 @@ Raw Data Files (CSV/Excel spreadsheet metrics + PDF/JSON/TXT text logs)
     -   `llm.py`: Thread-safe, rate-limit protected client for GitHub Models with persistent `.llm_cache.json` caching.
     -   `sk_kernel.py`: Configures Semantic Kernel connectors pointing to the GitHub Models base URL.
     -   `vector_store.py`: In-memory ChromaDB vector store matching metadata tags.
--   `app.py`: Streamlit frontend with a sleek space-blue premium theme, custom gradient cards, and interactive Incident Chat with suggested questions.
+-   `main.py`: FastAPI backend REST service exposing endpoints for file uploads, analysis, RAG chat, and download exports.
 -   `pipeline.py`: Pipeline orchestrator linking the ingestion, cleaning, storing, discovery, and reporting modules.
+-   `frontend/`: Premium Next.js React client application.
+    -   `src/app/page.js`: Dashboard homepage managing state, upload boxes, SVG graphics, and chat dialogs.
+    -   `src/app/globals.css`: Customized CSS system for layout, space-dark aesthetic variables, and components.
 
 ---
 
 ## ⚙️ Setup & Installation
 
+### 1. Backend Setup
 1.  **Clone the Repository**:
     ```bash
     git clone https://github.com/manasdutta04/meshloop.git
     cd meshloop
     ```
 
-2.  **Install Dependencies**:
+2.  **Initialize Virtual Environment**:
+    ```bash
+    python -m venv .venv
+    # Activate on Windows (PowerShell):
+    .venv\Scripts\Activate.ps1
+    ```
+
+3.  **Install Requirements**:
     ```bash
     pip install -r requirements.txt
     ```
 
-3.  **Configure Secrets**:
+4.  **Configure Environment Secrets**:
     Create a `.env` file in the root directory:
     ```env
     GITHUB_TOKEN=your_github_pat_token_here
     ```
-    *Note: Generate a token at [GitHub Developer Settings](https://github.com/settings/tokens/new) with the `models:read` scope.*
+    *Note: Generate a token at [GitHub Settings](https://github.com/settings/tokens/new) with the `models:read` scope.*
 
-4.  **Run the Streamlit Dashboard**:
+5.  **Run FastAPI Backend**:
     ```bash
-    streamlit run app.py
+    uvicorn main:app --port 8000 --reload
     ```
 
-5.  **Try Sample Data**:
-    *   Click **"Try Sample Data"** in the sidebar to run a diagnostic test on `arca_test_dataset.zip` (containing `sales.csv` and `server_log.txt`).
-    *   Witness the automated progress callbacks and check out the Root-Cause discoveries tab!
+---
+
+### 2. Frontend Setup
+1.  **Navigate to Frontend Directory**:
+    ```bash
+    cd frontend
+    ```
+
+2.  **Install Node Modules**:
+    ```bash
+    npm install
+    ```
+
+3.  **Run Next.js Dev Server**:
+    ```bash
+    npm run dev
+    ```
+    *The app will be available on [http://localhost:3000](http://localhost:3000).*

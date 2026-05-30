@@ -15,7 +15,8 @@ st.set_page_config(
 
 
 # ── Custom CSS ───────────────────────────────────────────────────────
-st.markdown("""
+# ── Custom CSS ───────────────────────────────────────────────────────
+st.html("""
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* Font overrides */
@@ -24,37 +25,38 @@ html, body, [class*="css"], .stMarkdown {
 }
 
 /* Remove top padding */
-.block-container { padding-top: 1rem; }
+.block-container { padding-top: 1.5rem; }
 
-/* Custom tab styles */
+/* Custom tab styles - fix clipping */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 10px;
+    gap: 8px;
+    padding-bottom: 4px;
 }
 .stTabs [data-baseweb="tab"] {
-    height: 52px;
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px 10px 0px 0px;
-    padding: 12px 20px;
+    background-color: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 8px 8px 0px 0px;
+    padding: 10px 16px;
     font-weight: 600;
-    color: #475569;
+    color: #94a3b8;
     transition: all 0.2s ease-in-out;
 }
 .stTabs [aria-selected="true"] {
     background-color: #1e3a5f !important;
-    border-color: #1e3a5f !important;
-    color: white !important;
-    box-shadow: 0 4px 6px rgba(30, 58, 95, 0.15);
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
-/* Top Insight card styling */
+/* Top Insight card styling - premium dark gradient */
 .top-insight-card {
-    background: linear-gradient(135deg, #1e3a5f 0%, #166534 100%);
+    background: linear-gradient(135deg, #1e3a5f 0%, #064e3b 100%);
     border-radius: 14px;
     padding: 1.5rem 1.75rem;
-    color: white;
+    color: #ffffff;
     margin: 1rem 0;
-    box-shadow: 0 8px 16px rgba(30, 58, 95, 0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    border: 1px solid #1e40af;
 }
 .top-insight-title {
     font-size: 1.25rem;
@@ -70,38 +72,50 @@ html, body, [class*="css"], .stMarkdown {
     line-height: 1.6;
 }
 
-/* Custom cards for findings */
+/* Custom cards for findings - dark style */
 .insight-card {
-    background: #ffffff;
+    background: #111827;
     border-radius: 12px;
-    border-left: 5px solid #94a3b8;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+    border-left: 5px solid #4b5563;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     padding: 1.25rem 1.5rem;
     margin: 0.8rem 0;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border-top: 1px solid #f1f5f9;
-    border-right: 1px solid #f1f5f9;
-    border-bottom: 1px solid #f1f5f9;
+    border-top: 1px solid #1f2937;
+    border-right: 1px solid #1f2937;
+    border-bottom: 1px solid #1f2937;
 }
 .insight-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 .insight-card.critical {
     border-left: 5px solid #ef4444;
-    background: linear-gradient(to right, #fef2f2, #ffffff);
+    background: linear-gradient(to right, #1f1315, #111827);
+    border-top: 1px solid #7f1d1d;
+    border-right: 1px solid #7f1d1d;
+    border-bottom: 1px solid #7f1d1d;
 }
 .insight-card.high {
     border-left: 5px solid #f97316;
-    background: linear-gradient(to right, #fff7ed, #ffffff);
+    background: linear-gradient(to right, #24140d, #111827);
+    border-top: 1px solid #7c2d12;
+    border-right: 1px solid #7c2d12;
+    border-bottom: 1px solid #7c2d12;
 }
 .insight-card.medium {
     border-left: 5px solid #eab308;
-    background: linear-gradient(to right, #fefce8, #ffffff);
+    background: linear-gradient(to right, #221a0f, #111827);
+    border-top: 1px solid #713f12;
+    border-right: 1px solid #713f12;
+    border-bottom: 1px solid #713f12;
 }
 .insight-card.low {
     border-left: 5px solid #22c55e;
-    background: linear-gradient(to right, #f0fdf4, #ffffff);
+    background: linear-gradient(to right, #0c1c15, #111827);
+    border-top: 1px solid #064e3b;
+    border-right: 1px solid #064e3b;
+    border-bottom: 1px solid #064e3b;
 }
 
 .insight-header {
@@ -115,7 +129,7 @@ html, body, [class*="css"], .stMarkdown {
 .insight-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1e293b;
+    color: #f8fafc;
 }
 .severity-tag {
     font-size: 0.75rem;
@@ -125,25 +139,25 @@ html, body, [class*="css"], .stMarkdown {
     border-radius: 20px;
     letter-spacing: 0.5px;
 }
-.severity-tag.critical { background-color: #fee2e2; color: #991b1b; }
-.severity-tag.high { background-color: #ffedd5; color: #9a3412; }
-.severity-tag.medium { background-color: #fef9c3; color: #854d0e; }
-.severity-tag.low { background-color: #dcfce7; color: #166534; }
+.severity-tag.critical { background-color: #7f1d1d; color: #fecaca; }
+.severity-tag.high { background-color: #7c2d12; color: #ffedd5; }
+.severity-tag.medium { background-color: #713f12; color: #fef9c3; }
+.severity-tag.low { background-color: #064e3b; color: #dcfce7; }
 
 .insight-desc {
     font-size: 0.95rem;
-    color: #475569;
+    color: #cbd5e1;
     line-height: 1.6;
 }
 .insight-evidence {
     margin-top: 0.8rem;
     padding-top: 0.6rem;
-    border-top: 1px dashed #e2e8f0;
+    border-top: 1px dashed #334155;
     font-size: 0.85rem;
-    color: #64748b;
+    color: #94a3b8;
 }
 
-/* Chat bubble styling */
+/* Chat bubble styling - dark */
 .chat-container {
     display: flex;
     flex-direction: column;
@@ -153,46 +167,47 @@ html, body, [class*="css"], .stMarkdown {
 .chat-user-msg {
     align-self: flex-end;
     background-color: #1e3a5f;
-    color: white;
+    color: #ffffff;
     border-radius: 16px 16px 4px 16px;
     padding: 0.75rem 1.25rem;
     max-width: 80%;
-    box-shadow: 0 4px 6px rgba(30, 58, 95, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     font-size: 0.95rem;
+    border: 1px solid #1e40af;
 }
 .chat-bot-msg {
     align-self: flex-start;
-    background-color: #f8fafc;
-    border-left: 4px solid #1e3a5f;
+    background-color: #111827;
+    border-left: 4px solid #3b82f6;
     border-radius: 4px 16px 16px 16px;
     padding: 0.75rem 1.25rem;
     max-width: 85%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    border-top: 1px solid #f1f5f9;
-    border-right: 1px solid #f1f5f9;
-    border-bottom: 1px solid #f1f5f9;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-top: 1px solid #1f2937;
+    border-right: 1px solid #1f2937;
+    border-bottom: 1px solid #1f2937;
     font-size: 0.95rem;
     line-height: 1.6;
-    color: #334155;
+    color: #f1f5f9;
 }
 .source-badges {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 0.6rem;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #1f2937;
     padding-top: 0.4rem;
 }
 .source-badge {
-    background-color: #edf2f7;
-    color: #334155;
+    background-color: #1f2937;
+    color: #3b82f6;
     padding: 0.15rem 0.5rem;
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 600;
 }
 </style>
-""", unsafe_allow_html=True)
+""")
 
 
 # ── Session state ─────────────────────────────────────────────────────
@@ -437,43 +452,47 @@ else:
                 st.markdown(f"- ✅ {fix}")
 
         # Download cleaned/balanced output
-        df_clean_tab = cln.get("cleaned_df")
-        if df_clean_tab is not None:
+        cleaned_dfs = cln.get("cleaned_dfs", {})
+        balanced_dfs = cln.get("balanced_dfs", {})
+        if cleaned_dfs:
             st.divider()
             st.markdown("#### 💾 Export Processed Data")
-            base_name = os.path.splitext(ds["file_name"])[0]
-            cleaned_csv = df_clean_tab.to_csv(index=False).encode("utf-8")
-            st.download_button(
-                "📥 Download cleaned CSV",
-                data=cleaned_csv,
-                file_name=f"cleaned_{base_name}.csv",
-                mime="text/csv",
-            )
-
-            balanced_df = cln.get("balanced_df")
-            if balanced_df is not None:
-                balanced_csv = balanced_df.to_csv(index=False).encode("utf-8")
-                st.download_button(
-                    "📥 Download balanced CSV",
-                    data=balanced_csv,
-                    file_name=f"balanced_{base_name}.csv",
-                    mime="text/csv",
-                )
-                br = cln.get("balance_report", {})
-                if br:
-                    st.caption(
-                        f"Balanced on '{br.get('balanced_on')}'. "
-                        f"Original counts: {br.get('original_counts')}"
+            for filename, df_clean_tab in cleaned_dfs.items():
+                if df_clean_tab is not None and len(df_clean_tab) > 0:
+                    base_name = os.path.splitext(filename)[0]
+                    cleaned_csv = df_clean_tab.to_csv(index=False).encode("utf-8")
+                    st.download_button(
+                        f"📥 Download cleaned CSV ({filename})",
+                        data=cleaned_csv,
+                        file_name=f"cleaned_{base_name}.csv",
+                        mime="text/csv",
+                        key=f"dl_clean_{filename}"
                     )
-            else:
-                st.caption("No balancing was applied for this dataset.")
+
+                    balanced_df = balanced_dfs.get(filename)
+                    if balanced_df is not None:
+                        balanced_csv = balanced_df.to_csv(index=False).encode("utf-8")
+                        st.download_button(
+                            f"📥 Download balanced CSV ({filename})",
+                            data=balanced_csv,
+                            file_name=f"balanced_{base_name}.csv",
+                            mime="text/csv",
+                            key=f"dl_bal_{filename}"
+                        )
+                        br = cln.get("cleaning_reports", {}).get(filename, {}).get("balance_report", {})
+                        if br:
+                            st.caption(
+                                f"Balanced on '{br.get('balanced_on')}'. "
+                                f"Original counts: {br.get('original_counts')}"
+                            )
 
 
     # ─────────────────────────────────────────────────────────────────
     # TAB 2 — CHARTS
     # ─────────────────────────────────────────────────────────────────
     with tab_charts:
-        df_clean = cln.get("cleaned_df")
+        cleaned_dfs = cln.get("cleaned_dfs", {})
+        df_clean = next(iter(cleaned_dfs.values())) if cleaned_dfs else None
         specs = rep.get("chart_specs", [])
         
         if df_clean is not None and len(df_clean) > 0:
