@@ -9,14 +9,26 @@ import {
   Trash, 
   Sparkles, 
   CheckCircle, 
-  TrendingUp, 
-  LineChart, 
+  LineChart as ChartIcon, 
   FileText, 
   RefreshCw,
   Search,
   MessageSquare,
   AlertTriangle,
-  ArrowRight
+  ArrowRight,
+  Database,
+  ArrowUpRight,
+  Activity,
+  FileSpreadsheet,
+  Layers,
+  Check,
+  Copy,
+  ChevronRight,
+  ExternalLink,
+  ShieldAlert,
+  Info,
+  Terminal,
+  DownloadCloud
 } from "lucide-react";
 
 export default function Home() {
@@ -34,6 +46,7 @@ export default function Home() {
   const [chatHistory, setChatHistory] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   // Refs
   const fileInputRef = useRef(null);
@@ -77,7 +90,6 @@ export default function Home() {
     files.forEach((f) => formData.append("files", f));
 
     try {
-      // Simulate progressive updates
       const interval = setInterval(() => {
         setProgressPercent((prev) => {
           if (prev < 40) {
@@ -112,7 +124,6 @@ export default function Home() {
       setProgressPercent(100);
       setProgressMsg("✅ Analysis complete!");
       
-      // Short delay to let user see 100% complete
       setTimeout(() => {
         setResult(data);
         setLoading(false);
@@ -180,7 +191,6 @@ export default function Home() {
     const q = questionText || chatInput;
     if (!q.trim() || !result) return;
 
-    // Append user message
     const userMsg = { role: "user", content: q };
     setChatHistory((prev) => [...prev, userMsg]);
     setChatInput("");
@@ -221,6 +231,14 @@ export default function Home() {
     }
   };
 
+  // Copy report to clipboard
+  const handleCopyReport = () => {
+    if (!result) return;
+    navigator.clipboard.writeText(result.report.report_text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   // Helper to download report
   const handleDownloadReport = () => {
     if (!result) return;
@@ -236,159 +254,127 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-1 min-h-screen bg-[#090d16] text-[#f1f5f9]">
-      {/* SIDEBAR */}
-      <aside className="w-80 bg-[#0d1321] border-r border-[#1f2937] p-6 flex flex-col justify-between hidden md:flex">
-        <div>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-900/30">
-              M
-            </div>
-            <div>
-              <h2 className="font-extrabold text-lg leading-none tracking-tight">Meshloop</h2>
-              <span className="text-xs text-blue-400 font-medium">ARCA Agent</span>
-            </div>
+    <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-zinc-800 selection:text-zinc-100">
+      {/* TOP HEADER / NAVBAR */}
+      <header className="h-14 border-b border-zinc-900 bg-zinc-950 px-6 flex items-center justify-between shrink-0 sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded bg-zinc-100 flex items-center justify-center text-zinc-950 font-bold text-sm">
+            M
           </div>
-
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-3">Workflow</h3>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-center gap-2 text-slate-400">
-                  <span className="w-5 h-5 rounded bg-[#1e293b] flex items-center justify-center text-xs text-blue-400 font-bold">1</span>
-                  Drop datasets (CSV/ZIP)
-                </li>
-                <li className="flex items-center gap-2 text-slate-400">
-                  <span className="w-5 h-5 rounded bg-[#1e293b] flex items-center justify-center text-xs text-blue-400 font-bold">2</span>
-                  Auto-cleaning checks
-                </li>
-                <li className="flex items-center gap-2 text-slate-400">
-                  <span className="w-5 h-5 rounded bg-[#1e293b] flex items-center justify-center text-xs text-blue-400 font-bold">3</span>
-                  Root-cause discovery
-                </li>
-                <li className="flex items-center gap-2 text-slate-400">
-                  <span className="w-5 h-5 rounded bg-[#1e293b] flex items-center justify-center text-xs text-blue-400 font-bold">4</span>
-                  Interactive Incident Q&A
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-3">Microsoft Stack Used</h3>
-              <div className="space-y-2">
-                <div className="bg-[#111827] border border-[#1f2937] p-2.5 rounded-lg text-xs flex justify-between items-center">
-                  <span className="text-slate-400 font-medium">LLM Engine</span>
-                  <span className="bg-blue-950/40 text-blue-400 font-bold px-2 py-0.5 rounded border border-blue-900/30">GPT-4o / Phi-4</span>
-                </div>
-                <div className="bg-[#111827] border border-[#1f2937] p-2.5 rounded-lg text-xs flex justify-between items-center">
-                  <span className="text-slate-400 font-medium">Framework</span>
-                  <span className="bg-red-950/40 text-red-400 font-bold px-2 py-0.5 rounded border border-red-900/30">Semantic Kernel</span>
-                </div>
-                <div className="bg-[#111827] border border-[#1f2937] p-2.5 rounded-lg text-xs flex justify-between items-center">
-                  <span className="text-slate-400 font-medium">Embeddings</span>
-                  <span className="bg-blue-950/40 text-blue-400 font-bold px-2 py-0.5 rounded border border-blue-900/30">3-small</span>
-                </div>
-              </div>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-sm tracking-tight text-zinc-100">Meshloop</span>
+            <span className="text-[10px] text-zinc-400 font-mono px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-900/50">ARCA v1.2</span>
           </div>
         </div>
 
-        <div className="border-t border-[#1f2937] pt-6 space-y-3">
-          <div className="flex gap-2">
-            <img src="https://img.shields.io/badge/GitHub%20Models-GPT--4o%20%2F%20Phi--4-blue?style=flat-square&logo=github&logoColor=white" className="h-5" alt="GitHub Models" />
-            <img src="https://img.shields.io/badge/Microsoft-Semantic%20Kernel-red?style=flat-square&logo=microsoft&logoColor=white" className="h-5" alt="Semantic Kernel" />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-zinc-900 bg-zinc-900/20">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] text-zinc-400 font-mono">Live API Connected</span>
           </div>
-          <div className="text-xs text-slate-500">
-            🏆 Microsoft Build AI Hackathon 2026
-          </div>
+          <a 
+            href="https://github.com/manasdutta04/meshloop" 
+            target="_blank" 
+            className="text-zinc-500 hover:text-zinc-300 transition-colors text-xs flex items-center gap-1"
+          >
+            Documentation <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
-      </aside>
+      </header>
 
-      {/* MAIN CONTAINER */}
-      <main className="flex-1 p-8 md:p-12 overflow-y-auto max-w-7xl mx-auto flex flex-col justify-start">
+      {/* WORKSPACE AREA */}
+      <main className="flex-1 max-w-5xl w-full mx-auto p-6 md:p-8 flex flex-col justify-start gap-6">
+        
         {/* LANDING / UPLOAD STATE */}
         {!loading && !result && (
-          <div className="max-w-2xl mx-auto w-full my-auto py-12 flex flex-col items-center">
-            <div className="inline-flex items-center gap-2 bg-blue-950/40 text-blue-400 border border-blue-900/40 px-3.5 py-1.5 rounded-full text-xs font-bold mb-6 tracking-wide uppercase">
-              <Sparkles className="w-3.5 h-3.5" /> AI-Powered Incident Investigation
+          <div className="max-w-2xl mx-auto w-full my-auto py-8 flex flex-col items-center">
+            
+            {/* Title & Description */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold tracking-tight text-white mb-2.5">
+                Autonomous Root-Cause Analyst
+              </h1>
+              <p className="text-sm text-zinc-400 max-w-md mx-auto leading-relaxed">
+                Ingest metric spreadsheets (CSV/Excel) and text logs (PDF/TXT/JSON). Meshloop detects statistical deviations and correlates them with events to diagnose outages.
+              </p>
             </div>
-            
-            <h1 className="text-4xl md:text-5xl font-black text-center mb-4 tracking-tight">
-              Meshloop <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent glow-text">ARCA</span>
-            </h1>
-            
-            <p className="text-slate-400 text-center text-lg mb-10 max-w-lg leading-relaxed">
-              Autonomously correlate tabular metrics deviations with unstructured incident logs to explain precisely <b>why</b> business outages happen.
-            </p>
 
-            {/* Drag & Drop Box */}
-            <div 
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current.click()}
-              className="w-full bg-[#111827]/60 border-2 border-dashed border-[#1f2937] hover:border-blue-500/50 rounded-2xl p-10 flex flex-col items-center cursor-pointer transition-all duration-300 shadow-2xl"
-            >
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                className="hidden" 
-                multiple
-              />
-              <Upload className="w-12 h-12 text-blue-400 mb-4 animate-bounce" />
-              <p className="text-slate-200 font-semibold mb-1 text-center">
-                Drag and drop your dataset here
-              </p>
-              <p className="text-xs text-slate-500 mb-6 text-center">
-                Supports CSV, Excel, PDF, JSON, TXT or ZIP files
-              </p>
-              <button 
-                type="button" 
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-5 py-2.5 rounded-lg shadow-lg shadow-blue-600/20 transition-all active:scale-95"
+            {/* Upload Area styled as shadcn card */}
+            <div className="w-full bg-zinc-900 border border-zinc-800 rounded-lg shadow-sm p-6">
+              <div 
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current.click()}
+                className="w-full border border-dashed border-zinc-800 hover:border-zinc-700 rounded-lg p-10 flex flex-col items-center cursor-pointer transition-colors duration-200 bg-zinc-950/40"
               >
-                Browse Files
-              </button>
-            </div>
-
-            {/* Selected Files List */}
-            {files.length > 0 && (
-              <div className="w-full mt-6 bg-[#0d1321] border border-[#1f2937] rounded-xl p-4">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Selected Files ({files.length})</span>
-                  <button 
-                    onClick={() => setFiles([])}
-                    className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 font-semibold"
-                  >
-                    <Trash className="w-3 h-3" /> Clear
-                  </button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  className="hidden" 
+                  multiple
+                />
+                <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4">
+                  <Upload className="w-5 h-5 text-zinc-400" />
                 </div>
-                <div className="max-h-32 overflow-y-auto space-y-2 pr-2">
-                  {files.map((f, idx) => (
-                    <div key={idx} className="flex justify-between items-center bg-[#111827]/80 px-3 py-2 rounded-lg text-sm border border-[#1f2937]">
-                      <span className="truncate max-w-md font-medium text-slate-300">📄 {f.name}</span>
-                      <span className="text-xs text-slate-500">{(f.size / 1024).toFixed(1)} KB</span>
-                    </div>
-                  ))}
-                </div>
-                
-                <button
-                  onClick={runAnalysis}
-                  className="w-full mt-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 transition-all"
+                <p className="text-xs font-semibold text-zinc-200 mb-1 text-center">
+                  Drag and drop files here to upload
+                </p>
+                <p className="text-[10px] text-zinc-500 text-center max-w-xs leading-normal">
+                  Supports ZIP file (containing sales metrics + server logs) or individual datasets.
+                </p>
+                <button 
+                  type="button" 
+                  className="mt-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-semibold text-xs px-3.5 py-2 rounded transition-colors"
                 >
-                  <Play className="w-4 h-4" /> Run Forensic Analysis
+                  Choose Files
                 </button>
               </div>
-            )}
 
-            {/* Sample Button */}
+              {/* Selected Files List */}
+              {files.length > 0 && (
+                <div className="mt-6 border-t border-zinc-850 pt-5">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Analysis Queue ({files.length})</span>
+                    <button 
+                      onClick={() => setFiles([])}
+                      className="text-xs text-zinc-400 hover:text-red-400 flex items-center gap-1 transition-colors"
+                    >
+                      <Trash className="w-3.5 h-3.5" /> Clear Queue
+                    </button>
+                  </div>
+                  
+                  <div className="max-h-36 overflow-y-auto space-y-2 pr-1 mb-4 scrollbar-thin">
+                    {files.map((f, idx) => (
+                      <div key={idx} className="flex justify-between items-center bg-zinc-950 px-3 py-2 rounded text-xs border border-zinc-850">
+                        <span className="truncate max-w-md font-mono text-zinc-300">📄 {f.name}</span>
+                        <span className="text-[10px] text-zinc-500 font-mono">{(f.size / 1024).toFixed(1)} KB</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={runAnalysis}
+                    className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-900 text-xs font-bold py-2.5 rounded flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                  >
+                    <Play className="w-4 h-4 text-zinc-900" /> Start Diagnostics
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Sandbox runner */}
             {files.length === 0 && (
-              <div className="mt-8 flex flex-col items-center gap-2">
-                <span className="text-xs text-slate-500 font-medium">Or check the dashboard layout with test data</span>
+              <div className="mt-6 flex items-center gap-2">
+                <span className="text-xs text-zinc-500">Want to test the layout?</span>
                 <button
                   onClick={runSampleAnalysis}
-                  className="bg-[#111827] border border-[#1f2937] hover:border-slate-700 hover:bg-[#182235] text-slate-300 font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 transition-all"
+                  className="text-indigo-400 hover:text-indigo-350 transition-colors text-xs font-bold flex items-center gap-1"
                 >
-                  <Sparkles className="w-4 h-4 text-blue-400" /> Try Sample Data
+                  Load Sample sandbox data <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
@@ -397,237 +383,244 @@ export default function Home() {
 
         {/* LOADING / PROGRESS STATE */}
         {loading && (
-          <div className="max-w-md mx-auto w-full my-auto py-16 flex flex-col items-center text-center">
-            <div className="relative w-24 h-24 mb-8">
-              {/* Outer pulsing ring */}
-              <div className="absolute inset-0 rounded-full border-4 border-blue-500/20 animate-ping"></div>
-              {/* Inner loading ring */}
-              <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
-              {/* Center bot icon */}
-              <div className="absolute inset-4 rounded-full bg-[#111827] flex items-center justify-center border border-[#1f2937]">
-                <Bot className="w-8 h-8 text-blue-400" />
+          <div className="max-w-md mx-auto w-full my-auto py-12 flex flex-col items-center text-center">
+            <div className="relative w-16 h-16 mb-6 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border border-t-zinc-400 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+              <div className="absolute inset-1.5 rounded-full border border-t-zinc-650 border-r-transparent border-b-transparent border-l-transparent animate-spin-reverse" style={{ animationDuration: '1.2s' }}></div>
+              <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                <Terminal className="w-4 h-4 text-zinc-400" />
               </div>
             </div>
             
-            <h3 className="text-xl font-bold mb-2">Analyzing Data Logs...</h3>
-            <p className="text-sm text-slate-500 mb-6 max-w-xs">{progressMsg}</p>
+            <h3 className="text-sm font-bold text-zinc-200 mb-1">Processing Dataset</h3>
+            <p className="text-xs text-zinc-500 h-6 leading-normal truncate max-w-sm mb-4">{progressMsg}</p>
             
-            {/* Progress Bar */}
-            <div className="w-full bg-[#111827] rounded-full h-2 border border-[#1f2937] overflow-hidden mb-2">
+            {/* Progress bar */}
+            <div className="w-full bg-zinc-900 rounded-full h-1 border border-zinc-850 overflow-hidden mb-2">
               <div 
-                className="bg-gradient-to-r from-blue-500 to-cyan-400 h-full transition-all duration-300"
+                className="bg-zinc-200 h-full transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
               ></div>
             </div>
-            <span className="text-xs text-blue-400 font-bold">{Math.round(progressPercent)}% Complete</span>
+            <span className="text-[10px] text-zinc-400 font-mono">{Math.round(progressPercent)}% Compiled</span>
           </div>
         )}
 
         {/* RESULTS STATE */}
         {result && (
-          <div className="space-y-8 animate-fade-in">
-            {/* Header / Summary stats */}
-            <div className="flex justify-between items-center flex-wrap gap-4 border-b border-[#1f2937] pb-6">
-              <div>
-                <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Diagnostic Analysis</span>
-                <h2 className="text-2xl font-black truncate max-w-lg mt-1 text-white">
-                  📄 {result.data_summary.file_name}
-                </h2>
+          <div className="space-y-6 animate-in fade-in-50 duration-200">
+            
+            {/* Session stats header */}
+            <div className="flex justify-between items-center flex-wrap gap-4 border-b border-zinc-900 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                  <Database className="w-4 h-4 text-zinc-400" />
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-500 font-mono block">Data Source</span>
+                  <h2 className="text-sm font-bold text-white font-mono leading-none mt-0.5">
+                    {result.data_summary.file_name}
+                  </h2>
+                </div>
               </div>
+              
               <button 
                 onClick={resetApp}
-                className="bg-[#111827] border border-[#1f2937] hover:border-red-900/30 hover:bg-red-950/20 text-slate-300 hover:text-red-400 font-bold text-sm px-4 py-2 rounded-lg flex items-center gap-1.5 transition-all"
+                className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-zinc-300 font-semibold text-xs px-3 py-1.5 rounded transition-colors shadow-sm"
               >
-                <RefreshCw className="w-4 h-4" /> Analyze Another
+                <RefreshCw className="w-3 h-3 inline mr-1" /> New Analysis
               </button>
             </div>
 
-            {/* Metrics cards grid */}
+            {/* Core Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#111827] border border-[#1f2937] p-5 rounded-xl flex flex-col justify-between">
-                <span className="text-xs text-slate-500 font-bold uppercase">Rows Analyzed</span>
-                <span className="text-3xl font-black mt-2 text-white">{result.data_summary.row_count.toLocaleString()}</span>
+              <div className="bg-zinc-900/50 border border-zinc-850 p-4 rounded-lg shadow-sm">
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">Rows Loaded</span>
+                <span className="text-xl font-bold text-white mt-1.5 block">{result.data_summary.row_count.toLocaleString()}</span>
               </div>
-              <div className="bg-[#111827] border border-[#1f2937] p-5 rounded-xl flex flex-col justify-between">
-                <span className="text-xs text-slate-500 font-bold uppercase">Columns Detected</span>
-                <span className="text-3xl font-black mt-2 text-white">{result.data_summary.column_names.length}</span>
+              <div className="bg-zinc-900/50 border border-zinc-850 p-4 rounded-lg shadow-sm">
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">Keys Analyzed</span>
+                <span className="text-xl font-bold text-white mt-1.5 block">{result.data_summary.column_names.length}</span>
               </div>
-              <div className="bg-[#111827] border border-[#1f2937] p-5 rounded-xl flex flex-col justify-between">
-                <span className="text-xs text-slate-500 font-bold uppercase">Issues Cleaned</span>
-                <span className="text-3xl font-black mt-2 text-emerald-400">{result.cleaning.issues_found.length}</span>
+              <div className="bg-zinc-900/50 border border-zinc-850 p-4 rounded-lg shadow-sm">
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">Auto Cleans</span>
+                <span className="text-xl font-bold text-emerald-500 mt-1.5 block">{result.cleaning.issues_found.length}</span>
               </div>
-              <div className="bg-[#111827] border border-[#1f2937] p-5 rounded-xl flex flex-col justify-between">
-                <span className="text-xs text-slate-500 font-bold uppercase">Insights Found</span>
-                <span className="text-3xl font-black mt-2 text-blue-400">{result.discovery.total_found}</span>
+              <div className="bg-zinc-900/50 border border-zinc-850 p-4 rounded-lg shadow-sm">
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">Outages Explained</span>
+                <span className="text-xl font-bold text-indigo-400 mt-1.5 block">{result.discovery.total_found}</span>
               </div>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="tab-list">
+            {/* Tab view controller */}
+            <div className="flex border-b border-zinc-900 p-0.5 bg-zinc-950 rounded-lg max-w-fit">
               <button 
                 onClick={() => setActiveTab("discoveries")}
-                className={`tab-button ${activeTab === "discoveries" ? "active" : ""}`}
+                className={`text-xs font-semibold px-3.5 py-1.5 rounded transition-colors ${
+                  activeTab === "discoveries" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-500 hover:text-zinc-355"
+                }`}
               >
-                🔍 Root-Cause Discoveries
+                🔍 Findings
               </button>
               <button 
                 onClick={() => setActiveTab("visuals")}
-                className={`tab-button ${activeTab === "visuals" ? "active" : ""}`}
+                className={`text-xs font-semibold px-3.5 py-1.5 rounded transition-colors ${
+                  activeTab === "visuals" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-500 hover:text-zinc-355"
+                }`}
               >
-                📊 Visual Analytics
+                📊 Visuals
               </button>
               <button 
                 onClick={() => setActiveTab("chat")}
-                className={`tab-button ${activeTab === "chat" ? "active" : ""}`}
+                className={`text-xs font-semibold px-3.5 py-1.5 rounded transition-colors ${
+                  activeTab === "chat" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-500 hover:text-zinc-355"
+                }`}
               >
-                💬 Incident Room Chat
+                💬 Ask Assistant
               </button>
               <button 
                 onClick={() => setActiveTab("report")}
-                className={`tab-button ${activeTab === "report" ? "active" : ""}`}
+                className={`text-xs font-semibold px-3.5 py-1.5 rounded transition-colors ${
+                  activeTab === "report" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-500 hover:text-zinc-355"
+                }`}
               >
                 📋 Audit Report
               </button>
               <button 
                 onClick={() => setActiveTab("export")}
-                className={`tab-button ${activeTab === "export" ? "active" : ""}`}
+                className={`text-xs font-semibold px-3.5 py-1.5 rounded transition-colors ${
+                  activeTab === "export" ? "bg-zinc-900 text-white border border-zinc-800" : "text-zinc-500 hover:text-zinc-355"
+                }`}
               >
-                💾 Exports & Clean Details
+                💾 Exports
               </button>
             </div>
 
-            {/* TAB CONTENTS */}
-            <div className="min-h-[400px]">
+            {/* TAB PANELS */}
+            <div className="min-h-[350px]">
               
               {/* TAB 1: ROOT-CAUSE DISCOVERIES */}
               {activeTab === "discoveries" && (
-                <div className="space-y-6">
-                  {/* Executive Summary */}
-                  <div className="bg-[#111827]/40 border border-[#1f2937] p-6 rounded-xl">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
-                      <FileText className="w-4 h-4 text-blue-400" /> Executive Summary
-                    </h3>
-                    <p className="text-[#cbd5e1] leading-relaxed text-sm">
+                <div className="space-y-5">
+                  {/* Summary card */}
+                  <div className="bg-zinc-900/40 border border-zinc-850 p-4.5 rounded-lg">
+                    <span className="text-[10px] text-zinc-500 font-black uppercase tracking-wider block mb-2">Executive Diagnostic Summary</span>
+                    <p className="text-zinc-300 text-xs leading-relaxed">
                       {result.discovery.summary}
                     </p>
                   </div>
 
-                  {/* Top Discovery Banner */}
+                  {/* Top Conclusion banner */}
                   {result.discovery.top_insight && (
-                    <div className="top-insight-card">
-                      <div className="top-insight-title">
-                        <Sparkles className="w-5 h-5 text-amber-300" /> Top Incident Discovery
-                      </div>
-                      <h4 className="text-xl font-bold mb-2 text-white">
+                    <div className="bg-indigo-950/15 border border-indigo-900/50 p-4.5 rounded-lg">
+                      <span className="inline-flex items-center gap-1 bg-indigo-950 text-indigo-400 border border-indigo-850/60 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider mb-2">
+                        Primary Event Outage
+                      </span>
+                      <h4 className="text-sm font-bold text-zinc-100 mb-1">
                         {result.discovery.top_insight.title}
                       </h4>
-                      <p className="top-insight-desc">
+                      <p className="text-xs text-zinc-400 leading-relaxed">
                         {result.discovery.top_insight.description}
                       </p>
                     </div>
                   )}
 
-                  {/* All Findings Grid */}
-                  <div>
-                    <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-4">All Incident Logs & Metrics Anomalies</h3>
-                    <div className="space-y-4">
-                      {result.discovery.insights.map((ins, idx) => {
-                        const sev = ins.severity?.toLowerCase() || "low";
-                        const icon = { critical: "🚨", high: "🔴", medium: "🟡", low: "🟢" }[sev] || "⚪";
-                        return (
-                          <div key={idx} className={`insight-card ${sev}`}>
-                            <div className="insight-header">
-                              <span className="insight-title font-bold text-white flex items-center gap-2">
-                                <span>{icon}</span> {ins.title}
-                              </span>
-                              <span className={`severity-tag ${sev}`}>{sev}</span>
-                            </div>
-                            <p className="insight-desc">{ins.description}</p>
-                            {ins.data_evidence && Object.keys(ins.data_evidence).length > 0 && (
-                              <div className="insight-evidence">
-                                <b>Evidence:</b> {JSON.stringify(ins.data_evidence)}
-                              </div>
-                            )}
+                  {/* Incident cards list */}
+                  <div className="space-y-3">
+                    <span className="text-[10px] text-zinc-500 font-black uppercase tracking-wider block">Analyzed Incidents & Anomaly Details</span>
+                    {result.discovery.insights.map((ins, idx) => {
+                      const sev = ins.severity?.toLowerCase() || "low";
+                      const sevBorderMap = {
+                        critical: "border-red-900/40 bg-red-950/5 text-red-400",
+                        high: "border-orange-900/40 bg-orange-950/5 text-orange-400",
+                        medium: "border-yellow-900/40 bg-yellow-950/5 text-yellow-400",
+                        low: "border-emerald-900/40 bg-emerald-950/5 text-emerald-400",
+                      };
+                      return (
+                        <div key={idx} className={`border p-4 rounded-lg flex flex-col gap-2 ${sevBorderMap[sev] || "border-zinc-800 bg-zinc-900"}`}>
+                          <div className="flex justify-between items-center gap-4">
+                            <span className="font-bold text-xs text-zinc-200">{ins.title}</span>
+                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border uppercase tracking-wider bg-zinc-950 border-zinc-800/80">
+                              {sev}
+                            </span>
                           </div>
-                        );
-                      })}
-                    </div>
+                          <p className="text-xs text-zinc-400 leading-relaxed">{ins.description}</p>
+                          {ins.data_evidence && Object.keys(ins.data_evidence).length > 0 && (
+                            <div className="bg-zinc-950 border border-zinc-900 rounded p-2 text-[10px] font-mono text-zinc-500 overflow-x-auto">
+                              Evidence: {JSON.stringify(ins.data_evidence)}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               {/* TAB 2: VISUAL ANALYTICS */}
               {activeTab === "visuals" && (
-                <div className="space-y-6">
-                  <div className="bg-[#111827] border border-[#1f2937] p-6 rounded-xl">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-6 flex items-center gap-1.5">
-                      <LineChart className="w-4 h-4 text-blue-400" /> Auto-Generated Visual Analytics
-                    </h3>
-
+                <div className="space-y-5">
+                  <div className="bg-zinc-900/40 border border-zinc-850 p-4.5 rounded-lg">
+                    <span className="text-[10px] text-zinc-500 font-black uppercase tracking-wider block mb-4">Metric Charts</span>
+                    
                     {result.report.chart_specs.length === 0 ? (
-                      <p className="text-sm text-slate-500 text-center py-12">No visualization specs returned for this dataset</p>
+                      <p className="text-xs text-zinc-600 text-center py-8">No visual analytics specs generated.</p>
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {result.report.chart_specs.map((spec, idx) => {
                           return (
-                            <div key={idx} className="bg-[#0b1329] border border-[#1f2937] p-5 rounded-xl flex flex-col">
-                              <span className="text-xs text-blue-400 font-bold uppercase mb-4">{spec.title}</span>
+                            <div key={idx} className="bg-zinc-950 border border-zinc-850 p-4 rounded-lg flex flex-col gap-3">
+                              <span className="text-xs font-semibold text-zinc-300 block font-mono">{spec.title}</span>
                               
-                              {/* RENDER PURE ACCESSIBLE SVG CHART */}
-                              <div className="w-full h-64 bg-[#090d16] border border-[#1f2937] rounded-lg p-4 flex items-center justify-center relative">
+                              <div className="w-full h-56 bg-zinc-900/30 border border-zinc-900 rounded p-2 flex items-center justify-center relative">
                                 {spec.type === "histogram" || spec.type === "bar" ? (
-                                  /* Render SVG Bar Chart */
                                   <svg className="w-full h-full" viewBox="0 0 100 60">
-                                    <line x1="10" y1="50" x2="90" y2="50" stroke="#1f2937" strokeWidth="0.5" />
-                                    <line x1="10" y1="10" x2="10" y2="50" stroke="#1f2937" strokeWidth="0.5" />
-                                    {/* Mock Bars */}
-                                    <rect x="20" y="25" width="10" height="25" fill="#3b82f6" rx="1" />
-                                    <rect x="35" y="15" width="10" height="35" fill="#3b82f6" rx="1" />
-                                    <rect x="50" y="35" width="10" height="15" fill="#ef4444" rx="1" />
-                                    <rect x="65" y="20" width="10" height="30" fill="#3b82f6" rx="1" />
-                                    <text x="25" y="55" fill="#475569" fontSize="3" textAnchor="middle">Q1</text>
-                                    <text x="40" y="55" fill="#475569" fontSize="3" textAnchor="middle">Q2</text>
+                                    <line x1="10" y1="50" x2="90" y2="50" stroke="#27272a" strokeWidth="0.5" />
+                                    <line x1="10" y1="10" x2="10" y2="50" stroke="#27272a" strokeWidth="0.5" />
+                                    {/* Flat rectangular bars */}
+                                    <rect x="22" y="25" width="6" height="25" fill="#52525b" />
+                                    <rect x="37" y="15" width="6" height="35" fill="#52525b" />
+                                    <rect x="52" y="40" width="6" height="10" fill="#dc2626" />
+                                    <rect x="67" y="20" width="6" height="30" fill="#52525b" />
+                                    <text x="25" y="55" fill="#71717a" fontSize="3" textAnchor="middle">East</text>
+                                    <text x="40" y="55" fill="#71717a" fontSize="3" textAnchor="middle">West</text>
                                     <text x="55" y="55" fill="#ef4444" fontSize="3" textAnchor="middle">Drop</text>
-                                    <text x="70" y="55" fill="#475569" fontSize="3" textAnchor="middle">Q4</text>
+                                    <text x="70" y="55" fill="#71717a" fontSize="3" textAnchor="middle">North</text>
                                   </svg>
                                 ) : spec.type === "line" ? (
-                                  /* Render SVG Line Chart */
                                   <svg className="w-full h-full" viewBox="0 0 100 60">
-                                    <line x1="10" y1="50" x2="90" y2="50" stroke="#1f2937" strokeWidth="0.5" />
-                                    {/* Grid Lines */}
-                                    <line x1="10" y1="35" x2="90" y2="35" stroke="#111827" strokeWidth="0.3" strokeDasharray="1" />
-                                    <line x1="10" y1="20" x2="90" y2="20" stroke="#111827" strokeWidth="0.3" strokeDasharray="1" />
-                                    {/* Line path */}
+                                    <line x1="10" y1="50" x2="90" y2="50" stroke="#27272a" strokeWidth="0.5" />
+                                    <line x1="10" y1="35" x2="90" y2="35" stroke="#18181b" strokeWidth="0.3" strokeDasharray="1" />
+                                    <line x1="10" y1="20" x2="90" y2="20" stroke="#18181b" strokeWidth="0.3" strokeDasharray="1" />
+                                    {/* Flat line chart */}
                                     <path 
-                                      d="M 15 20 L 30 18 L 45 45 L 60 46 L 75 22 L 85 15" 
+                                      d="M 15 20 L 30 18 L 45 42 L 60 45 L 75 22 L 85 15" 
                                       fill="none" 
-                                      stroke="#3b82f6" 
-                                      strokeWidth="1.5"
-                                      strokeLinecap="round"
+                                      stroke="#fafafa" 
+                                      strokeWidth="1.2"
+                                      strokeLinecap="square"
                                     />
-                                    {/* Highlighting drop */}
-                                    <circle cx="45" cy="45" r="2" fill="#ef4444" />
-                                    <circle cx="60" cy="46" r="2" fill="#ef4444" />
-                                    <text x="52" y="54" fill="#ef4444" fontSize="3" textAnchor="middle">Incident Period</text>
+                                    <circle cx="45" cy="42" r="1.5" fill="#dc2626" />
+                                    <circle cx="60" cy="45" r="1.5" fill="#dc2626" />
+                                    <text x="52" y="54" fill="#dc2626" fontSize="3.2" textAnchor="middle" fontWeight="bold">Outage</text>
                                   </svg>
                                 ) : (
-                                  /* Render SVG Scatter Chart */
                                   <svg className="w-full h-full" viewBox="0 0 100 60">
-                                    <line x1="10" y1="50" x2="90" y2="50" stroke="#1f2937" strokeWidth="0.5" />
-                                    {/* Dots */}
-                                    <circle cx="20" cy="40" r="1.5" fill="#3b82f6" opacity="0.6" />
-                                    <circle cx="30" cy="35" r="1.5" fill="#3b82f6" opacity="0.6" />
-                                    <circle cx="38" cy="42" r="1.5" fill="#3b82f6" opacity="0.6" />
-                                    <circle cx="48" cy="15" r="1.8" fill="#ef4444" /> {/* outlier */}
-                                    <circle cx="55" cy="28" r="1.5" fill="#3b82f6" opacity="0.6" />
-                                    <circle cx="70" cy="20" r="1.5" fill="#3b82f6" opacity="0.6" />
-                                    <circle cx="80" cy="18" r="1.5" fill="#3b82f6" opacity="0.6" />
-                                    {/* Trendline */}
-                                    <line x1="15" y1="42" x2="85" y2="15" stroke="#3b82f6" strokeWidth="0.5" strokeDasharray="2" />
-                                    <text x="48" y="10" fill="#ef4444" fontSize="3" textAnchor="middle">Outlier</text>
+                                    <line x1="10" y1="50" x2="90" y2="50" stroke="#27272a" strokeWidth="0.5" />
+                                    {/* Scatter dots */}
+                                    <circle cx="20" cy="38" r="1.2" fill="#71717a" />
+                                    <circle cx="30" cy="33" r="1.2" fill="#71717a" />
+                                    <circle cx="40" cy="36" r="1.2" fill="#71717a" />
+                                    <circle cx="48" cy="15" r="1.5" fill="#dc2626" />
+                                    <circle cx="55" cy="28" r="1.2" fill="#71717a" />
+                                    <circle cx="70" cy="22" r="1.2" fill="#71717a" />
+                                    <circle cx="80" cy="18" r="1.2" fill="#71717a" />
+                                    {/* regression line */}
+                                    <line x1="15" y1="40" x2="85" y2="15" stroke="#a1a1aa" strokeWidth="0.4" strokeDasharray="1.5" />
+                                    <text x="48" y="10" fill="#dc2626" fontSize="3" textAnchor="middle" fontWeight="bold">Outlier</text>
                                   </svg>
                                 )}
-                                <span className="absolute bottom-2 right-2 text-[10px] text-slate-500">Forensics Mode</span>
+                                <span className="absolute bottom-2 right-2.5 text-[8px] font-mono text-zinc-600 bg-zinc-950 px-1 py-0.5 rounded border border-zinc-900">ARCA Graph</span>
                               </div>
                             </div>
                           );
@@ -640,112 +633,119 @@ export default function Home() {
 
               {/* TAB 3: INCIDENT ROOM CHAT */}
               {activeTab === "chat" && (
-                <div className="space-y-6">
-                  <div className="bg-[#111827]/40 border border-[#1f2937] p-6 rounded-xl flex flex-col">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-1.5">
-                      <Bot className="w-4 h-4 text-blue-400" /> Incident Room Q&A (RAG-based chat)
-                    </h3>
+                <div className="space-y-5">
+                  <div className="bg-zinc-900/40 border border-zinc-850 p-4.5 rounded-lg flex flex-col">
+                    <span className="text-[10px] text-zinc-500 font-black uppercase tracking-wider block mb-4">Forensic Conversation Room</span>
 
-                    {/* Chat container */}
-                    <div className="chat-container min-h-[300px] mb-4">
+                    {/* Chat viewport */}
+                    <div className="bg-zinc-950 border border-zinc-850 rounded p-4 min-h-[280px] max-h-[400px] overflow-y-auto space-y-4 mb-4 scrollbar-thin">
                       {chatHistory.length === 0 && (
-                        <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                          <Bot className="w-10 h-10 text-slate-600 mb-2" />
-                          <p className="text-sm text-slate-400 font-semibold mb-1">Incident Room Open</p>
-                          <p className="text-xs text-slate-500 max-w-xs">Ask specific queries like: "Which checks failed on May 12?" or "Explain the outage in East region".</p>
+                        <div className="flex flex-col items-center justify-center h-full text-center py-16">
+                          <Bot className="w-8 h-8 text-zinc-650 mb-2.5" />
+                          <p className="text-xs text-zinc-300 font-bold mb-1">ARCA Chat Assistant Active</p>
+                          <p className="text-[10px] text-zinc-550 max-w-xs leading-normal">Ask any question to search ChromaDB vectors and synthesize log/metrics details.</p>
                         </div>
                       )}
 
                       {chatHistory.map((msg, idx) => (
                         <div 
                           key={idx} 
-                          className={msg.role === "user" ? "chat-user-msg" : "chat-bot-msg"}
+                          className={`flex flex-col max-w-[80%] ${msg.role === "user" ? "ml-auto items-end" : "mr-auto items-start"}`}
                         >
-                          <span className="font-semibold text-xs block mb-1 opacity-70">
-                            {msg.role === "user" ? "🧑 You" : "🤖 Meshloop Analyst"}
+                          <span className="text-[9px] font-mono text-zinc-500 uppercase mb-0.5">
+                            {msg.role === "user" ? "User" : "ARCA Analyst"}
                           </span>
-                          <p className="text-sm leading-relaxed">{msg.content}</p>
-                          
-                          {/* Citation sources */}
-                          {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
-                            <div className="source-badges">
-                              {msg.sources.filter(Boolean).map((src, sidx) => (
-                                <span key={sidx} className="source-badge">
-                                  📄 {src}
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                          <div className={`p-3 rounded text-xs leading-relaxed border ${
+                            msg.role === "user" 
+                              ? "bg-zinc-900 border-zinc-800 text-zinc-200 rounded-tr-none" 
+                              : "bg-zinc-950 border-zinc-900 text-zinc-400 rounded-tl-none"
+                          }`}>
+                            <p className="whitespace-pre-line">{msg.content}</p>
+                            
+                            {/* Citation list */}
+                            {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-zinc-900/60">
+                                <span className="text-[8px] text-zinc-600 font-bold uppercase mr-1">Sources:</span>
+                                {msg.sources.filter(Boolean).map((src, sidx) => (
+                                  <span key={sidx} className="bg-zinc-900 border border-zinc-850 text-indigo-400 font-mono text-[8px] px-1 py-0.5 rounded">
+                                    {src}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
 
                       {chatLoading && (
-                        <div className="chat-bot-msg animate-pulse">
-                          <span className="font-semibold text-xs block mb-1 opacity-70">🤖 Meshloop Analyst</span>
-                          <p className="text-sm">Thinking...</p>
+                        <div className="flex flex-col max-w-[80%] mr-auto items-start">
+                          <span className="text-[9px] font-mono text-zinc-500 uppercase mb-0.5">ARCA Analyst</span>
+                          <div className="p-3 bg-zinc-900/30 border border-zinc-900 text-zinc-600 text-xs rounded animate-pulse">
+                            Searching vectors & correlating metadata...
+                          </div>
                         </div>
                       )}
                       
                       <div ref={chatEndRef} />
                     </div>
 
-                    {/* Suggested followups */}
+                    {/* Chat followups suggestions */}
                     {chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === "assistant" && chatHistory[chatHistory.length - 1].suggested_followups && (
                       <div className="mb-4">
-                        <span className="text-xs font-bold text-slate-500 uppercase block mb-2">Suggested follow-ups:</span>
+                        <span className="text-[9px] font-black uppercase text-zinc-550 block mb-2 tracking-wider">Suggested Queries</span>
                         <div className="flex flex-wrap gap-2">
                           {chatHistory[chatHistory.length - 1].suggested_followups.map((q, idx) => (
                             <button
                               key={idx}
                               onClick={() => submitChat(q)}
-                              className="bg-[#1f2937] hover:bg-slate-700 text-xs text-slate-300 font-medium px-3.5 py-2 rounded-full border border-slate-700 transition-all flex items-center gap-1"
+                              className="bg-zinc-950 hover:bg-zinc-900 text-zinc-350 hover:text-zinc-100 text-[10px] px-2.5 py-1 rounded border border-zinc-850 transition-colors flex items-center gap-1.5"
                             >
-                              {q} <ArrowRight className="w-3 h-3 text-blue-400" />
+                              {q} <ArrowRight className="w-3 h-3 text-zinc-500" />
                             </button>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Standard Suggestions if chat history is empty */}
+                    {/* Pre-configured suggestion prompts */}
                     {chatHistory.length === 0 && (
                       <div className="mb-4">
-                        <span className="text-xs font-bold text-slate-500 uppercase block mb-2">Try asking:</span>
+                        <span className="text-[9px] font-black uppercase text-zinc-550 block mb-2 tracking-wider">Common Diagnostic Prompts</span>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {[
-                            "What is the most important pattern in this data?",
-                            "Which values look suspicious or unusual?",
-                            "What should I investigate first?",
-                            "Summarize the key takeaways."
+                            "Explain the most critical issue found in this dataset",
+                            "Did database timeouts impact region sales?",
+                            "List the data corrections that were executed",
+                            "What is the statistical average drop on outliers?"
                           ].map((q, idx) => (
                             <button
                               key={idx}
                               onClick={() => submitChat(q)}
-                              className="text-left bg-[#111827]/80 hover:bg-[#182235] text-xs text-slate-300 font-medium px-4 py-2.5 rounded-lg border border-[#1f2937] transition-all flex justify-between items-center"
+                              className="text-left bg-zinc-950 hover:bg-zinc-900 text-[10px] text-zinc-400 hover:text-zinc-200 px-3 py-2 rounded border border-zinc-850 transition-colors flex justify-between items-center"
                             >
-                              {q} <ArrowRight className="w-3 h-3 text-blue-400" />
+                              <span>{q}</span> <ArrowRight className="w-3 h-3 text-zinc-500 shrink-0 ml-2" />
                             </button>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Input box */}
+                    {/* Chat input form */}
                     <div className="flex gap-2">
                       <input 
                         type="text"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && submitChat()}
-                        placeholder="Ask anything about your datasets..."
-                        className="flex-1 bg-[#0d121f] border border-[#1f2937] focus:border-blue-500 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none transition-all"
+                        placeholder="Search timeline context..."
+                        className="flex-1 bg-zinc-950 border border-zinc-850 focus:border-zinc-700 rounded px-3 py-2 text-xs text-white focus:outline-none transition-colors"
                       />
                       <button 
                         onClick={() => submitChat()}
                         disabled={chatLoading}
-                        className="bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white px-5 rounded-lg text-sm font-bold shadow-md shadow-blue-900/10 flex items-center justify-center transition-all active:scale-95"
+                        className="bg-zinc-100 hover:bg-zinc-200 disabled:bg-zinc-800 text-zinc-900 px-4 rounded text-xs font-bold transition-colors shrink-0 flex items-center justify-center shadow-sm"
                       >
-                        Send
+                        Ask
                       </button>
                     </div>
                   </div>
@@ -754,65 +754,81 @@ export default function Home() {
 
               {/* TAB 4: AUDIT REPORT */}
               {activeTab === "report" && (
-                <div className="space-y-6">
-                  <div className="bg-[#111827]/40 border border-[#1f2937] p-6 rounded-xl flex flex-col">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                        <FileText className="w-4 h-4 text-blue-400" /> Full Forensic Report (.md)
-                      </h3>
-                      <button
-                        onClick={handleDownloadReport}
-                        className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1 shadow-md shadow-blue-900/10 transition-all"
-                      >
-                        <Download className="w-3.5 h-3.5" /> Download Report
-                      </button>
+                <div className="space-y-4">
+                  <div className="bg-zinc-900/40 border border-zinc-850 p-4.5 rounded-lg flex flex-col">
+                    <div className="flex justify-between items-center flex-wrap gap-3 mb-4">
+                      <span className="text-[10px] text-zinc-500 font-black uppercase tracking-wider flex items-center gap-1">
+                        <FileText className="w-3.5 h-3.5 text-zinc-550" /> Markdown Audit summary
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleCopyReport}
+                          className="bg-zinc-950 hover:bg-zinc-900 border border-zinc-850 text-zinc-300 font-semibold text-xs px-2.5 py-1.5 rounded flex items-center gap-1 transition-colors"
+                        >
+                          {copied ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-500" /> Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5 text-zinc-500" /> Copy
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={handleDownloadReport}
+                          className="bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-semibold text-xs px-2.5 py-1.5 rounded flex items-center gap-1 transition-colors shadow-sm"
+                        >
+                          <DownloadCloud className="w-3.5 h-3.5" /> Download Report
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="bg-[#0b1329] border border-[#1f2937] rounded-xl p-6 overflow-y-auto max-h-[500px] text-sm text-slate-300 font-mono whitespace-pre-wrap leading-relaxed">
+                    <div className="bg-zinc-950 border border-zinc-850 rounded p-4.5 overflow-y-auto max-h-[460px] text-xs text-zinc-400 font-mono whitespace-pre-wrap leading-relaxed scrollbar-thin">
                       {result.report.report_text}
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* TAB 5: EXPORTS & QUALITY CHECK */}
+              {/* TAB 5: EXPORTS & QUALITY TABLE */}
               {activeTab === "export" && (
-                <div className="space-y-6">
-                  {/* Export Cleaned Files */}
-                  <div className="bg-[#111827]/40 border border-[#1f2937] p-6 rounded-xl">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-1.5">
-                      <Download className="w-4 h-4 text-blue-400" /> Export Cleaned Tabular Datasets
-                    </h3>
+                <div className="space-y-5">
+                  {/* CSV Exports */}
+                  <div className="bg-zinc-900/40 border border-zinc-850 p-4.5 rounded-lg">
+                    <span className="text-[10px] text-zinc-500 font-black uppercase tracking-wider block mb-3">Tabular exports</span>
 
                     {result.data_summary.file_names && result.data_summary.file_names.length > 0 ? (
-                      <div className="space-y-4">
+                      <div className="space-y-2">
                         {result.data_summary.file_names.map((fname, idx) => {
-                          // Check if it's a tabular file (csv, xlsx, xls, json)
                           const ext = fname.split(".").pop().toLowerCase();
                           const isTabular = ["csv", "xlsx", "xls", "json"].includes(ext);
                           
                           if (!isTabular) return null;
 
                           return (
-                            <div key={idx} className="bg-[#0d1321] border border-[#1f2937] p-4 rounded-xl flex justify-between items-center flex-wrap gap-4">
-                              <div>
-                                <span className="text-sm font-bold text-white block">📄 {fname}</span>
-                                <span className="text-xs text-slate-500">Processed & structured layout ready</span>
+                            <div key={idx} className="bg-zinc-950 border border-zinc-850 p-3.5 rounded flex justify-between items-center flex-wrap gap-4">
+                              <div className="flex items-center gap-2">
+                                <FileSpreadsheet className="w-4 h-4 text-zinc-500" />
+                                <div>
+                                  <span className="text-xs font-bold text-zinc-300 block font-mono">{fname}</span>
+                                  <span className="text-[10px] text-zinc-500 block">Validated & clean layout</span>
+                                </div>
                               </div>
                               <div className="flex gap-2">
                                 <a 
                                   href={`http://localhost:8000/api/export/cleaned?session_id=${result.session_id}&filename=${fname}`}
                                   target="_blank"
-                                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1 transition-all"
+                                  className="bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 font-semibold text-xs px-3 py-1.5 rounded transition-colors shadow-sm"
                                 >
-                                  <Download className="w-3.5 h-3.5" /> Cleaned CSV
+                                  Cleaned CSV
                                 </a>
                                 <a 
                                   href={`http://localhost:8000/api/export/balanced?session_id=${result.session_id}&filename=${fname}`}
                                   target="_blank"
-                                  className="bg-[#1f2937] hover:bg-slate-700 text-slate-300 font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1 border border-slate-700 transition-all"
+                                  className="bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-semibold text-xs px-3 py-1.5 rounded transition-colors shadow-sm"
                                 >
-                                  <Download className="w-3.5 h-3.5" /> Balanced CSV
+                                  Balanced CSV
                                 </a>
                               </div>
                             </div>
@@ -820,23 +836,33 @@ export default function Home() {
                         })}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-500">No exports available for this dataset type.</p>
+                      <p className="text-xs text-zinc-500">No tabular spreadsheet files detected.</p>
                     )}
                   </div>
 
-                  {/* Clean Fixes Applied checklist */}
+                  {/* Corrections checklists */}
                   {result.cleaning.issues_found.length > 0 && (
-                    <div className="bg-[#111827]/40 border border-[#1f2937] p-6 rounded-xl">
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-1.5">
-                        <CheckCircle className="w-4 h-4 text-emerald-400" /> Data Quality Checks Applied
-                      </h3>
-                      <div className="space-y-2">
-                        {result.cleaning.issues_found.map((issue, idx) => (
-                          <div key={idx} className="flex items-start gap-2 text-sm text-slate-300">
-                            <span className="text-emerald-400 mt-0.5 font-bold">✓</span>
-                            <span>{issue}</span>
-                          </div>
-                        ))}
+                    <div className="bg-zinc-900/40 border border-zinc-850 p-4.5 rounded-lg">
+                      <span className="text-[10px] text-zinc-500 font-black uppercase tracking-wider block mb-3">Corrections ledger</span>
+                      <div className="border border-zinc-850 bg-zinc-950 rounded overflow-hidden">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="border-b border-zinc-850 bg-zinc-900/20">
+                              <th className="p-2.5 text-[9px] font-black uppercase tracking-wider text-zinc-500 w-10 text-center">Status</th>
+                              <th className="p-2.5 text-[9px] font-black uppercase tracking-wider text-zinc-500">Validation Check details</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-850 text-xs">
+                            {result.cleaning.issues_found.map((issue, idx) => (
+                              <tr key={idx} className="hover:bg-zinc-900/5">
+                                <td className="p-2.5 text-center">
+                                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-950 border border-emerald-900/40 text-emerald-400 font-bold text-[10px]">✓</span>
+                                </td>
+                                <td className="p-2.5 text-zinc-300 font-mono text-[11px]">{issue}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   )}
