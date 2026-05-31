@@ -405,7 +405,7 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-8 flex flex-col gap-3 border-t border-white/6 pt-5 text-[10px] uppercase tracking-[0.24em] text-zinc-500 md:flex-row md:items-center md:justify-between">
-            <span>© 2026 Meshloop ARCA. Built for teams that need answers fast.</span>
+            <span>© 2026 Meshloop</span>
             <span>Autonomous root-cause analysis for metrics, logs, and incident response.</span>
           </div>
         </div>
