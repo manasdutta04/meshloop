@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { FloatingIconsHero, type FloatingIconsHeroProps } from "../components/ui/floating-icons-hero-section";
+import { Header } from "@/components/ui/header-2";
 
 const heroIcons: FloatingIconsHeroProps["icons"] = [
   { id: 1, icon: Database, className: "top-[10%] left-[8%]" },
@@ -90,29 +91,7 @@ export default function LandingPage() {
       <div className="absolute top-[-120px] left-[-120px] h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle,_rgba(129,140,248,0.18),_transparent_70%)] blur-3xl" />
       <div className="absolute bottom-[-140px] right-[-90px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,_rgba(244,244,245,0.10),_transparent_65%)] blur-3xl" />
 
-      <header className="sticky top-0 z-50 border-b border-white/6 bg-[#030307]/72 backdrop-blur-xl font-ui">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 md:px-10">
-          <Link href="/" className="flex items-center gap-3">
-            <img src="/logo.png" alt="Meshloop Logo" className="h-9 w-9 object-contain" />
-            <div className="leading-tight">
-              <div className="text-sm font-semibold tracking-[0.22em] text-white uppercase">Meshloop</div>
-              <div className="text-[10px] tracking-[0.28em] text-zinc-500 uppercase">Autonomous Root-Cause Analyst</div>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-3 text-xs font-medium tracking-[0.18em] uppercase">
-            <Link href="/docs" className="text-zinc-400 transition-colors hover:text-white">
-              Docs
-            </Link>
-            <Link
-              href="/app"
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white px-4 py-2 text-[11px] font-semibold text-zinc-950 transition-transform duration-300 hover:-translate-y-0.5"
-            >
-              Launch Console <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="relative z-10">
         <section className="relative overflow-hidden border-b border-white/6">

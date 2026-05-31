@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, Shield } from "lucide-react";
+import { Header } from "@/components/ui/header-2";
 
 export default function TermsPage() {
   return (
@@ -11,18 +12,7 @@ export default function TermsPage() {
       <div className="absolute top-0 left-1/4 w-[500px] h-[300px] ambient-glow -translate-y-1/2" />
       <div className="absolute bottom-0 right-1/4 w-[500px] h-[300px] ambient-glow translate-y-1/3" style={{ opacity: 0.5 }} />
 
-      {/* NAVBAR */}
-      <nav className="h-16 border-b border-zinc-900/60 bg-[#030307]/75 backdrop-blur-md px-6 md:px-12 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
-            <img src="/logo.png" alt="Meshloop Logo" className="w-8 h-8 object-contain" />
-            <div className="flex flex-col">
-              <span className="font-extrabold text-sm tracking-tight text-white leading-none">Meshloop</span>
-              <span className="text-[9px] text-zinc-500 font-mono mt-0.5">Terms</span>
-            </div>
-          </Link>
-        </div>
-      </nav>
+      <Header />
 
       {/* CONTENT AREA */}
       <main className="flex-1 max-w-2xl w-full mx-auto p-6 md:p-10 space-y-8 z-10 animate-fade-in-up">

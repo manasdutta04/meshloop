@@ -31,6 +31,7 @@ import {
   DownloadCloud
 } from "lucide-react";
 import Link from "next/link";
+import { Header } from "@/components/ui/header-2";
 
 export default function AppHome() {
   // Application states
@@ -489,30 +490,7 @@ export default function AppHome() {
               })}
             </div>
 
-            {/* TAB PANELS */}
-            <div className="min-h-[350px] animate-fade-in-up">
-              
-              {/* TAB 1: ROOT-CAUSE DISCOVERIES */}
-              {activeTab === "discoveries" && (
-                <div className="space-y-6">
-                  {/* Summary card */}
-                  <div className="glass-card p-5 rounded-xl">
-                    <span className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-2">Executive Diagnostic Summary</span>
-                    <p className="text-zinc-300 text-xs leading-relaxed font-medium">
-                      {result.discovery.summary}
-                    </p>
-                  </div>
-
-                  {/* Top Conclusion banner */}
-                  {result.discovery.top_insight && (
-                    <div className="bg-indigo-950/10 border border-indigo-900/40 p-5 rounded-xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 blur-xl rounded-full"></div>
-                      <span className="inline-flex items-center gap-1 bg-indigo-950 border border-indigo-850/80 px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider mb-2.5 text-indigo-400">
-                        Primary Event Outage
-                      </span>
-                      <h4 className="text-sm font-extrabold text-zinc-100 mb-1.5">
-                        {result.discovery.top_insight.title}
-                      </h4>
+            <Header />
                       <p className="text-xs text-zinc-400 leading-relaxed">
                         {result.discovery.top_insight.description}
                       </p>
