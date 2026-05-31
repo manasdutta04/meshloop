@@ -258,9 +258,7 @@ export default function Home() {
       {/* TOP HEADER / NAVBAR */}
       <header className="h-14 border-b border-zinc-900 bg-zinc-950 px-6 flex items-center justify-between shrink-0 sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded bg-zinc-100 flex items-center justify-center text-zinc-950 font-bold text-sm">
-            M
-          </div>
+          <img src="/logo.png" alt="Meshloop Logo" className="w-7 h-7 rounded object-cover border border-zinc-900 bg-zinc-900" />
           <div className="flex items-center gap-2">
             <span className="font-bold text-sm tracking-tight text-zinc-100">Meshloop</span>
             <span className="text-[10px] text-zinc-400 font-mono px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-900/50">ARCA v1.2</span>
