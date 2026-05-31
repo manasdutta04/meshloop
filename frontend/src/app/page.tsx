@@ -450,7 +450,7 @@ export default function LandingPage() {
                 <img
                   src="/claude-color.webp"
                   alt="Claude"
-                  className="h-8 w-8 rounded-full border border-white/10 object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="h-8 w-8 object-contain transition-transform duration-300 group-hover:scale-105"
                 />
                 <span className="pointer-events-none absolute -top-11 left-1/2 z-20 w-max -translate-x-1/2 rounded-full border border-white/10 bg-[#05070c] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
                   Claude
