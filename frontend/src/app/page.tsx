@@ -149,27 +149,51 @@ export default function LandingPage() {
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
         </section>
 
-        <section className="border-b border-white/6 px-6 py-10 font-ui md:px-10">
-          <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
-            {stats.map((stat) => (
-              <div key={stat.label} className="rounded-2xl border border-white/8 bg-white/3 p-5 backdrop-blur-sm">
-                <div className="text-[10px] uppercase tracking-[0.28em] text-zinc-500">{stat.label}</div>
-                <div className="mt-2 text-sm font-semibold text-white">{stat.value}</div>
+        <section className="border-b border-white/6 px-6 py-14 md:px-10">
+          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+            <div className="font-ui">
+              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-300">
+                Daily Operations Layer
+              </span>
+              <h2 className="mt-5 font-serif-ui text-3xl leading-[1.02] tracking-[-0.03em] text-white md:text-5xl">
+                What teams do in Meshloop after every alert.
+              </h2>
+              <p className="mt-5 max-w-xl text-sm leading-7 text-zinc-400">
+                Instead of jumping across tools, responders run a simple operating loop: ingest evidence, inspect correlated signals, then publish a clear decision-ready summary.
+              </p>
+
+              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Input</p>
+                  <p className="mt-2 text-sm font-semibold text-white">Mixed files</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Analysis</p>
+                  <p className="mt-2 text-sm font-semibold text-white">Cross-modal correlation</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Output</p>
+                  <p className="mt-2 text-sm font-semibold text-white">Incident narrative</p>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="mx-auto mt-6 grid max-w-7xl gap-3 text-[10px] uppercase tracking-[0.22em] text-zinc-500 md:grid-cols-3">
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3">
-              <span className="text-emerald-300">Faster MTTR</span>
-              <p className="mt-1 text-xs tracking-[0.06em] text-zinc-200">Median triage time drops from hours to minutes.</p>
             </div>
-            <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/8 px-4 py-3">
-              <span className="text-indigo-300">Unified Evidence</span>
-              <p className="mt-1 text-xs tracking-[0.06em] text-zinc-200">Metrics and logs are analyzed in one pass.</p>
-            </div>
-            <div className="rounded-2xl border border-white/15 bg-white/6 px-4 py-3">
-              <span className="text-zinc-200">Decision Clarity</span>
-              <p className="mt-1 text-xs tracking-[0.06em] text-zinc-200">Reports are ready for engineering and leadership syncs.</p>
+
+            <div className="grid gap-3 font-ui md:grid-cols-2">
+              <article className="rounded-3xl border border-emerald-500/25 bg-emerald-500/8 p-5 md:col-span-2">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-emerald-300">Detect</p>
+                <h3 className="mt-2 text-lg font-semibold text-white">Pinpoint abnormal behavior fast</h3>
+                <p className="mt-2 text-sm leading-7 text-zinc-200/90">Auto-discovery highlights spikes, drops, and suspicious windows before triage begins.</p>
+              </article>
+              <article className="rounded-3xl border border-indigo-500/25 bg-indigo-500/8 p-5">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-indigo-300">Correlate</p>
+                <h3 className="mt-2 text-base font-semibold text-white">Match logs to metrics</h3>
+                <p className="mt-2 text-sm leading-7 text-zinc-200/90">Evidence is linked by time, region, and context.</p>
+              </article>
+              <article className="rounded-3xl border border-white/15 bg-white/6 p-5">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-zinc-300">Communicate</p>
+                <h3 className="mt-2 text-base font-semibold text-white">Share one clear report</h3>
+                <p className="mt-2 text-sm leading-7 text-zinc-200/90">Teams align on the same root-cause narrative.</p>
+              </article>
             </div>
           </div>
         </section>
