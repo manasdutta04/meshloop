@@ -5,4 +5,11 @@ __pycache__/
 uploads/
 *.env
 .llm_cache.json
+.venv/
+/node_modules/
+/package.json
+/package-lock.json
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
