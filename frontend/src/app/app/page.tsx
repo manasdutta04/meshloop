@@ -31,7 +31,6 @@ import {
   DownloadCloud
 } from "lucide-react";
 import Link from "next/link";
-import { Header } from "../../components/ui/header-2";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
 
@@ -281,7 +280,23 @@ export default function AppHome() {
       <div className="absolute top-0 left-1/4 w-[500px] h-[300px] ambient-glow -translate-y-1/2" />
       <div className="absolute top-0 right-1/4 w-[500px] h-[300px] ambient-glow -translate-y-1/2" />
 
-      <Header />
+      <div className="w-full max-w-5xl mx-auto p-6 md:p-10">
+        <div className="flex items-center justify-between py-3">
+          <Link href="/" className="flex items-center gap-3">
+            <img src="/logo.png" alt="Meshloop Logo" className="h-8 w-8 object-contain" />
+            <span className="text-sm font-semibold tracking-[0.22em] text-white uppercase">Meshloop</span>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/docs"
+              className="bg-white text-zinc-950 px-3 py-1.5 rounded-md font-bold text-xs"
+            >
+              Documentation
+            </Link>
+          </div>
+        </div>
+      </div>
 
       {/* WORKSPACE AREA */}
       <main className="flex-1 max-w-5xl w-full mx-auto p-6 md:p-10 flex flex-col justify-start gap-8 z-10">
