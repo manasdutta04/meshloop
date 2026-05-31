@@ -84,18 +84,21 @@ const steps = [
   },
 ];
 
-const testimonials = [
+const userGroups = [
   {
-    name: "Riya Menon",
-    role: "Head of SRE, Northstar Retail",
-    quote:
-      "Meshloop cut our incident triage from two hours to fifteen minutes by correlating logs and metrics in one place.",
+    title: "SRE & Platform Teams",
+    pain: "Signal is split across dashboards, logs, and ad-hoc notes during outages.",
+    value: "Meshloop correlates everything into one incident brief with traceable evidence.",
   },
   {
-    name: "Marcus Lee",
-    role: "Data Platform Lead, Atlas Fintech",
-    quote:
-      "The report output is leadership-ready. We no longer rewrite incident narratives manually after every outage.",
+    title: "Data & Analytics",
+    pain: "Metric anomalies are easy to detect, but root-cause context is hard to prove.",
+    value: "ARCA links anomalies with relevant log windows so analysis is actionable.",
+  },
+  {
+    title: "Operations Leadership",
+    pain: "Postmortems are slow because incident narratives are stitched together manually.",
+    value: "Exportable reports shorten reviews and improve decision quality across teams.",
   },
 ];
 
@@ -146,7 +149,7 @@ export default function LandingPage() {
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
         </section>
 
-        <section id="customers" className="border-b border-white/6 px-6 py-8 font-ui md:px-10">
+        <section className="border-b border-white/6 px-6 py-10 font-ui md:px-10">
           <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
             {stats.map((stat) => (
               <div key={stat.label} className="rounded-2xl border border-white/8 bg-white/3 p-5 backdrop-blur-sm">
@@ -155,17 +158,17 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          <div className="mx-auto mt-5 grid max-w-7xl gap-3 text-[10px] uppercase tracking-[0.22em] text-zinc-500 md:grid-cols-3">
+          <div className="mx-auto mt-6 grid max-w-7xl gap-3 text-[10px] uppercase tracking-[0.22em] text-zinc-500 md:grid-cols-3">
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3">
-              <span className="text-emerald-300">MTTR Reduced</span>
+              <span className="text-emerald-300">Faster MTTR</span>
               <p className="mt-1 text-xs tracking-[0.06em] text-zinc-200">Median triage time drops from hours to minutes.</p>
             </div>
             <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/8 px-4 py-3">
-              <span className="text-indigo-300">Source Coverage</span>
+              <span className="text-indigo-300">Unified Evidence</span>
               <p className="mt-1 text-xs tracking-[0.06em] text-zinc-200">Metrics and logs are analyzed in one pass.</p>
             </div>
             <div className="rounded-2xl border border-white/15 bg-white/6 px-4 py-3">
-              <span className="text-zinc-200">Executive Clarity</span>
+              <span className="text-zinc-200">Decision Clarity</span>
               <p className="mt-1 text-xs tracking-[0.06em] text-zinc-200">Reports are ready for engineering and leadership syncs.</p>
             </div>
           </div>
@@ -264,7 +267,7 @@ export default function LandingPage() {
         <section id="features" className="border-y border-white/6 bg-white/[0.02] px-6 py-20 md:px-10">
           <div className="mx-auto max-w-7xl">
             <div className="max-w-2xl">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">What ships</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">Core features</div>
               <h2 className="mt-4 font-serif-ui text-3xl leading-[0.98] tracking-[-0.03em] text-white md:text-5xl">
                 Everything a startup needs to turn raw telemetry into a repeatable product.
               </h2>
@@ -341,21 +344,22 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="px-6 py-12 md:px-10">
+        <section id="users" className="px-6 py-14 md:px-10">
           <div className="mx-auto max-w-7xl">
             <div className="max-w-2xl">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">Customer stories</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">Users</div>
               <h2 className="mt-4 font-serif-ui text-3xl leading-[0.98] tracking-[-0.03em] text-white md:text-5xl">
-                Loved by operators who run mission-critical systems.
+                Built for teams that own uptime and incident outcomes.
               </h2>
             </div>
-            <div className="mt-10 grid gap-4 lg:grid-cols-2">
-              {testimonials.map((item) => (
-                <article key={item.name} className="rounded-[28px] border border-white/8 bg-white/4 p-6">
-                  <p className="text-base leading-8 text-zinc-200 font-serif-ui">“{item.quote}”</p>
+            <div className="mt-10 grid gap-4 lg:grid-cols-3">
+              {userGroups.map((item) => (
+                <article key={item.title} className="rounded-[28px] border border-white/8 bg-white/4 p-6">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500 font-ui">{item.title}</div>
+                  <p className="mt-4 text-sm leading-7 text-zinc-400 font-ui">{item.pain}</p>
                   <div className="mt-5 border-t border-white/10 pt-4">
-                    <div className="text-sm font-semibold text-white font-ui">{item.name}</div>
-                    <div className="text-xs uppercase tracking-[0.2em] text-zinc-500 font-ui">{item.role}</div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-emerald-300 font-ui">Outcome</div>
+                    <p className="mt-2 text-sm leading-7 text-zinc-200 font-ui">{item.value}</p>
                   </div>
                 </article>
               ))}
