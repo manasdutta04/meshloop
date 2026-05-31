@@ -1,22 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  --background: #030307;
+  --foreground: #f4f4f5;
+  --primary-glow: radial-gradient(rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.05), transparent 70%);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
+  overflow-x: hidden;
 }
 
 /* Custom Scrollbar for Sleek Dark Mode (SaaS style) */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: #030307;
 }
 ::-webkit-scrollbar-thumb {
   background: #27272a;
@@ -26,7 +28,7 @@ body {
   background: #3f3f46;
 }
 
-/* Custom Reverse Spin animation for loading state */
+/* Custom animations for loading states */
 @keyframes spin-reverse {
   to {
     transform: rotate(-360deg);
@@ -34,5 +36,66 @@ body {
 }
 
 .animate-spin-reverse {
-  animation: spin-reverse 1.5s linear infinite;
+  animation: spin-reverse 1.2s linear infinite;
+}
+
+/* Premium Radial Glow Backgrounds */
+.ambient-glow {
+  background: var(--primary-glow);
+  position: absolute;
+  pointer-events: none;
+  filter: blur(100px);
+  border-radius: 9999px;
+}
+
+/* Modern Dots Grid Background */
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+  background: rgba(15, 15, 25, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card:hover {
+  background: rgba(20, 20, 35, 0.7);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.08);
+}
+
+/* Glow button hover */
+.glow-btn-primary {
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-btn-primary:hover {
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.25), 0 0 5px rgba(99, 102, 241, 0.2);
+  transform: translateY(-1px);
+}
+
+.glow-btn-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateY(-1px);
+}
+
+/* Smooth page load animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
