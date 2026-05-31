@@ -348,9 +348,9 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-white/6 bg-[#020306] px-6 py-12 font-ui md:px-10 lg:py-16">
+      <footer className="border-t border-white/6 bg-[#020306] px-6 py-8 font-ui md:px-10 lg:py-10">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-10 lg:grid-cols-[1.25fr_0.75fr_0.75fr_0.75fr] lg:gap-8">
+          <div className="grid gap-8 lg:grid-cols-[1.35fr_0.7fr_0.7fr_0.85fr] lg:gap-10">
             <div>
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -367,30 +367,15 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <p className="mt-6 max-w-md text-sm leading-7 text-zinc-400">
+              <p className="mt-5 max-w-md text-sm leading-7 text-zinc-400">
                 Meshloop turns noisy metrics and logs into one clear incident narrative, so teams can move from detection to decision without leaving the console.
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-2">
-                {[
-                  "Startup-grade UX",
-                  "Ops-ready",
-                  "AI-assisted triage",
-                  "FastAPI + Next.js",
-                ].map((chip) => (
-                  <span
-                    key={chip}
-                    className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-zinc-300"
-                  >
-                    {chip}
-                  </span>
-                ))}
-              </div>
             </div>
 
-            <div>
+            <div className="pt-1">
               <h3 className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white">Company</h3>
-              <div className="mt-5 flex flex-col gap-3 text-sm text-zinc-400">
+              <div className="mt-4 flex flex-col gap-2.5 text-sm text-zinc-400">
                 <Link href="/" className="transition-colors hover:text-white">Home</Link>
                 <Link href="/docs" className="transition-colors hover:text-white">Docs</Link>
                 <Link href="/app" className="transition-colors hover:text-white">Console</Link>
@@ -398,9 +383,9 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div>
+            <div className="pt-1">
               <h3 className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white">Platform</h3>
-              <div className="mt-5 flex flex-col gap-3 text-sm text-zinc-400">
+              <div className="mt-4 flex flex-col gap-2.5 text-sm text-zinc-400">
                 <span>Metric analysis</span>
                 <span>Log correlation</span>
                 <span>Incident briefs</span>
@@ -408,9 +393,9 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div>
+            <div className="pt-1">
               <h3 className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white">Resources</h3>
-              <div className="mt-5 flex flex-col gap-3 text-sm text-zinc-400">
+              <div className="mt-4 flex flex-col gap-2.5 text-sm text-zinc-400">
                 <Link href="/terms" className="transition-colors hover:text-white">Terms</Link>
                 <Link href="/docs" className="transition-colors hover:text-white">Architecture</Link>
                 <Link href="/app" className="transition-colors hover:text-white">Launch App</Link>
@@ -419,7 +404,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="mt-10 flex flex-col gap-4 border-t border-white/6 pt-6 text-[10px] uppercase tracking-[0.24em] text-zinc-500 md:flex-row md:items-center md:justify-between">
+          <div className="mt-8 flex flex-col gap-3 border-t border-white/6 pt-5 text-[10px] uppercase tracking-[0.24em] text-zinc-500 md:flex-row md:items-center md:justify-between">
             <span>© 2026 Meshloop ARCA. Built for teams that need answers fast.</span>
             <span>Autonomous root-cause analysis for metrics, logs, and incident response.</span>
           </div>
