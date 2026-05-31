@@ -404,9 +404,61 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 border-t border-white/6 pt-5 text-[10px] uppercase tracking-[0.24em] text-zinc-500 md:flex-row md:items-center md:justify-between">
-            <span>© 2026 Meshloop</span>
-            <span>Autonomous root-cause analysis for metrics, logs, and incident response.</span>
+          <div className="mt-8 flex flex-col gap-4 border-t border-white/6 pt-5 md:flex-row md:items-center md:justify-between">
+            <span className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">© 2026 Meshloop</span>
+
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-zinc-500">
+              <span>Cooked by</span>
+
+              <a
+                href="https://github.com/manasdutta04"
+                target="_blank"
+                rel="noreferrer"
+                className="group relative flex h-8 w-8 items-center justify-center"
+                aria-label="manas dutta on GitHub"
+              >
+                <img
+                  src="https://avatars.githubusercontent.com/u/122201926?v=4"
+                  alt="manas dutta"
+                  className="h-8 w-8 rounded-full border border-white/10 object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <span className="pointer-events-none absolute -top-11 left-1/2 z-20 w-max -translate-x-1/2 rounded-full border border-white/10 bg-[#05070c] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                  manas
+                </span>
+              </a>
+
+              <a
+                href="https://github.com/priya369-ps"
+                target="_blank"
+                rel="noreferrer"
+                className="group relative flex h-8 w-8 items-center justify-center"
+                aria-label="priya on GitHub"
+              >
+                <img
+                  src="https://avatars.githubusercontent.com/u/253213951?v=4"
+                  alt="priya"
+                  className="h-8 w-8 rounded-full border border-white/10 object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <span className="pointer-events-none absolute -top-11 left-1/2 z-20 w-max -translate-x-1/2 rounded-full border border-white/10 bg-[#05070c] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                  priya
+                </span>
+              </a>
+
+              <span>&</span>
+
+              <span className="group relative flex h-8 w-8 items-center justify-center" aria-label="Claude">
+                <img
+                  src="/claude-color.webp"
+                  alt="Claude"
+                  className="h-8 w-8 rounded-full border border-white/10 object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <span className="pointer-events-none absolute -top-11 left-1/2 z-20 w-max -translate-x-1/2 rounded-full border border-white/10 bg-[#05070c] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                  Claude
+                </span>
+              </span>
+            </div>
+
+            
           </div>
         </div>
       </footer>
