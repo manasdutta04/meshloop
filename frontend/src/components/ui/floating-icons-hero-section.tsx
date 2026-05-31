@@ -137,14 +137,14 @@ const FloatingIconsHero = React.forwardRef<
       </div>
 
       <div className="relative z-10 text-center px-4">
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-gradient-to-b from-foreground to-foreground/70 text-transparent bg-clip-text">
+        <h1 className="font-serif-ui text-5xl leading-[0.92] tracking-[-0.04em] text-transparent bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text md:text-7xl">
           {title}
         </h1>
-        <p className="mt-6 max-w-xl mx-auto text-lg text-muted-foreground">
+        <p className="mt-6 max-w-xl mx-auto text-base leading-7 text-muted-foreground font-ui md:text-lg">
           {subtitle}
         </p>
         <div className="mt-10">
-          <Button asChild size="lg" className="px-8 py-6 text-base font-semibold">
+          <Button asChild size="lg" className="px-8 py-6 text-base font-semibold uppercase tracking-[0.18em]">
             <a href={ctaHref}>{ctaText}</a>
           </Button>
         </div>

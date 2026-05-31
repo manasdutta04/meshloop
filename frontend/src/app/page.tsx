@@ -7,17 +7,16 @@ import {
   Bot,
   Brain,
   CheckCircle,
-  Cpu,
   Database,
   FileText,
   Layers,
-  LineChart as ChartIcon,
   MessageSquare,
   Radar,
   Search,
   ShieldCheck,
   Sparkles,
   Terminal,
+  Workflow,
 } from "lucide-react";
 
 import { FloatingIconsHero, type FloatingIconsHeroProps } from "../components/ui/floating-icons-hero-section";
@@ -30,220 +29,317 @@ const heroIcons: FloatingIconsHeroProps["icons"] = [
   { id: 5, icon: FileText, className: "top-[5%] left-[28%]" },
   { id: 6, icon: MessageSquare, className: "top-[7%] right-[28%]" },
   { id: 7, icon: Sparkles, className: "bottom-[8%] left-[25%]" },
-  { id: 8, icon: Cpu, className: "top-[40%] left-[14%]" },
+  { id: 8, icon: Brain, className: "top-[40%] left-[14%]" },
   { id: 9, icon: Terminal, className: "top-[72%] right-[24%]" },
-  { id: 10, icon: ChartIcon, className: "top-[25%] right-[18%]" },
-  { id: 11, icon: Bot, className: "top-[54%] left-[6%]" },
-  { id: 12, icon: Brain, className: "top-[58%] right-[6%]" },
 ];
 
-const capabilityCards = [
+const stats = [
+  { label: "Signals unified", value: "3 data types" },
+  { label: "Root-cause speed", value: "Minutes, not hours" },
+  { label: "Best for", value: "Ops, analytics, support" },
+];
+
+const features = [
   {
     icon: Database,
-    title: "Ingest any mix of files",
+    title: "Bring in messy data",
     description:
-      "CSV sheets, text logs, and structured exports land in one pipeline so analysts do not have to normalize data by hand.",
+      "CSV, Excel, JSON, and logs flow through one pipeline so teams stop context-switching between tools.",
   },
   {
     icon: Layers,
-    title: "Clean and align signals",
+    title: "Clean the signal",
     description:
-      "Timestamp repair, null handling, and tag normalization prepare every dataset for accurate correlation across sources.",
+      "The app normalizes timestamps, metrics, and tags before any analysis is run.",
   },
   {
     icon: MessageSquare,
-    title: "Explain the root cause",
+    title: "Explain the why",
     description:
-      "ARCA turns statistical anomalies into plain-English findings, then follows up with a chat interface for investigation.",
+      "ARCA turns anomalies into a plain-English incident brief with follow-up questions built in.",
   },
 ];
 
-const pipelineSteps = [
+const steps = [
   {
     step: "01",
-    icon: Database,
     title: "Upload evidence",
-    description: "Drop in messy operational files, sample data, or archived incident logs.",
+    text: "Drop in datasets and logs from an incident or a sample run.",
   },
   {
     step: "02",
-    icon: Search,
-    title: "Correlate patterns",
-    description: "Statistical checks and semantic search narrow the probable failure window.",
+    title: "Find the anomaly",
+    text: "The pipeline detects spikes, drops, and suspicious patterns.",
   },
   {
     step: "03",
-    icon: Cpu,
-    title: "Generate findings",
-    description: "The assistant summarizes anomalies, probable causes, and recommended next actions.",
+    title: "Link the cause",
+    text: "Relevant log lines and metadata are matched to the time window.",
   },
   {
     step: "04",
-    icon: MessageSquare,
-    title: "Iterate with chat",
-    description: "Teams can ask follow-up questions and trace supporting evidence from the session.",
+    title: "Ship the answer",
+    text: "The final report is written clearly enough for operators and leadership.",
   },
 ];
 
 export default function LandingPage() {
   return (
     <div className="relative min-h-screen bg-background text-foreground antialiased selection:bg-zinc-800 selection:text-zinc-100 bg-dot-grid">
-      <div className="absolute top-0 left-1/4 w-[600px] h-[400px] ambient-glow -translate-y-1/2" />
-      <div className="absolute top-[40%] right-1/4 w-[800px] h-[500px] ambient-glow" style={{ opacity: 0.7 }} />
-      <div className="absolute bottom-0 left-1/3 w-[700px] h-[400px] ambient-glow translate-y-1/3" />
+      <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_55%)]" />
+      <div className="absolute top-[-120px] left-[-120px] h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle,_rgba(129,140,248,0.18),_transparent_70%)] blur-3xl" />
+      <div className="absolute bottom-[-140px] right-[-90px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,_rgba(244,244,245,0.10),_transparent_65%)] blur-3xl" />
 
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-900/60 bg-[#030307]/75 backdrop-blur-md px-6 md:px-12 h-16 flex items-center justify-between font-ui">
-        <div className="flex items-center gap-3">
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-            <img
-              src="/logo.png"
-              alt="Meshloop Logo"
-              className="relative w-8 h-8 rounded-lg object-cover border border-zinc-800/80 bg-zinc-950"
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-sm tracking-tight text-white leading-none">Meshloop</span>
-            <span className="text-[9px] text-zinc-500 font-mono mt-0.5">ARCA Platform</span>
-          </div>
-        </div>
+      <header className="sticky top-0 z-50 border-b border-white/6 bg-[#030307]/72 backdrop-blur-xl font-ui">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 md:px-10">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="relative">
+              <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-br from-white/40 via-white/10 to-transparent blur-sm" />
+              <img
+                src="/logo.png"
+                alt="Meshloop Logo"
+                className="relative h-9 w-9 rounded-xl border border-white/10 object-cover"
+              />
+            </div>
+            <div className="leading-tight">
+              <div className="text-sm font-semibold tracking-[0.22em] text-white uppercase">Meshloop</div>
+              <div className="text-[10px] tracking-[0.28em] text-zinc-500 uppercase">Autonomous Root-Cause Analyst</div>
+            </div>
+          </Link>
 
-        <div className="flex items-center gap-6">
-          <Link href="/docs" className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors font-medium tracking-wide uppercase">
-            Docs
-          </Link>
-          <Link
-            href="/app"
-            className="glow-btn-primary bg-white text-zinc-950 text-xs font-bold px-4 py-2 rounded-full transition-all duration-300 tracking-wide uppercase"
-          >
-            Launch Console
-          </Link>
+          <div className="flex items-center gap-3 text-xs font-medium tracking-[0.18em] uppercase">
+            <Link href="/docs" className="text-zinc-400 transition-colors hover:text-white">
+              Docs
+            </Link>
+            <Link
+              href="/app"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white px-4 py-2 text-[11px] font-semibold text-zinc-950 transition-transform duration-300 hover:-translate-y-0.5"
+            >
+              Launch Console <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </div>
       </header>
 
       <main className="relative z-10">
-        <FloatingIconsHero
-          title="Fusing database metrics with server logs to diagnose outages."
-          subtitle="Meshloop ARCA statistically parses sheets, correlates anomalies with unstructured logs, and explains infrastructure failures in plain English."
-          ctaText="Launch Diagnostic Console"
-          ctaHref="/app"
-          icons={heroIcons}
-        />
+        <section className="relative overflow-hidden border-b border-white/6">
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.035),transparent_32%)]" />
+          <FloatingIconsHero
+            title="From noisy files to a clear root cause."
+            subtitle="Meshloop ARCA blends metrics, logs, and conversational analysis into a single product experience for operators who need answers fast."
+            ctaText="Try the Console"
+            ctaHref="/app"
+            icons={heroIcons}
+            className="min-h-[780px]"
+          />
 
-        <section className="relative border-t border-zinc-900/80 bg-zinc-900/10 px-6 py-20 md:px-12 font-ui">
-          <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
-            {capabilityCards.map((card) => (
-              <div
-                key={card.title}
-                className="glass-card rounded-2xl border border-zinc-900/80 p-6 transition-all duration-300 hover:border-white/15"
-              >
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-950 text-indigo-300">
-                  <card.icon className="h-5 w-5" />
-                </div>
-                <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-white">{card.title}</h2>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400">{card.description}</p>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
+        </section>
+
+        <section className="border-b border-white/6 px-6 py-8 font-ui md:px-10">
+          <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
+            {stats.map((stat) => (
+              <div key={stat.label} className="rounded-2xl border border-white/8 bg-white/3 p-5 backdrop-blur-sm">
+                <div className="text-[10px] uppercase tracking-[0.28em] text-zinc-500">{stat.label}</div>
+                <div className="mt-2 text-sm font-semibold text-white">{stat.value}</div>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="relative border-t border-zinc-900/80 px-6 py-24 md:px-12 font-ui">
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-12 max-w-2xl">
-              <span className="text-[10px] font-black uppercase tracking-[0.35em] text-indigo-400">How it works</span>
-              <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
-                A compact pipeline for incident triage.
+        <section className="px-6 py-20 md:px-10">
+          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/4 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-zinc-400 font-ui">
+                <Sparkles className="h-3.5 w-3.5 text-white" /> Built for incident response
+              </div>
+              <h2 className="mt-6 max-w-2xl font-serif-ui text-4xl leading-[0.95] tracking-[-0.03em] text-white md:text-6xl">
+                A startup-grade operating layer for messy operational data.
               </h2>
-              <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-                The landing page now mirrors the product flow: gather evidence, clean it, correlate it, then explain the incident with a chat-ready summary.
+              <p className="mt-6 max-w-xl text-base leading-7 text-zinc-400 font-ui">
+                The homepage is now positioned like a real product: a single clear promise, a fast path to the console, and enough proof to make the value obvious in seconds.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3 font-ui">
+                {[
+                  "Metric anomaly detection",
+                  "Log correlation",
+                  "RAG chat follow-ups",
+                  "Forensic reporting",
+                ].map((pill) => (
+                  <span
+                    key={pill}
+                    className="rounded-full border border-white/8 bg-white/4 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-300"
+                  >
+                    {pill}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-10 flex flex-col gap-3 sm:flex-row font-ui">
+                <Link
+                  href="/app"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-zinc-950 transition-transform duration-300 hover:-translate-y-0.5"
+                >
+                  Launch Console <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/docs"
+                  className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/4 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white transition-colors duration-300 hover:bg-white/8"
+                >
+                  Read the system
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid gap-4 self-start rounded-[32px] border border-white/8 bg-white/4 p-5 backdrop-blur-xl md:p-6">
+              <div className="rounded-[28px] border border-white/8 bg-[#080b12] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)]">
+                <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.26em] text-zinc-500 font-ui">
+                  <span>Live incident brief</span>
+                  <span>Session 048x</span>
+                </div>
+                <div className="mt-5 space-y-3">
+                  <div className="flex items-center gap-3 rounded-2xl border border-rose-500/15 bg-rose-500/6 p-4">
+                    <Activity className="h-4 w-4 text-rose-400" />
+                    <div>
+                      <div className="text-sm text-white font-ui">Write latency spiked 410%</div>
+                      <div className="text-xs text-zinc-500 font-ui">Detected across the East region at 14:02 UTC</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-2xl border border-indigo-500/15 bg-indigo-500/6 p-4">
+                    <Search className="h-4 w-4 text-indigo-300" />
+                    <div>
+                      <div className="text-sm text-white font-ui">Matched to pool exhaustion logs</div>
+                      <div className="text-xs text-zinc-500 font-ui">Exact timestamp overlap, same deployment window</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/15 bg-emerald-500/6 p-4">
+                    <CheckCircle className="h-4 w-4 text-emerald-400" />
+                    <div>
+                      <div className="text-sm text-white font-ui">Root cause explained clearly</div>
+                      <div className="text-xs text-zinc-500 font-ui">Incident summary is ready for leadership and ops</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-[24px] border border-white/8 bg-[#0b0f16] p-4">
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500 font-ui">Confidence</div>
+                  <div className="mt-2 text-2xl font-semibold text-white font-serif-ui">98.4%</div>
+                </div>
+                <div className="rounded-[24px] border border-white/8 bg-[#0b0f16] p-4">
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500 font-ui">Cleanup</div>
+                  <div className="mt-2 text-2xl font-semibold text-white font-serif-ui">12 fixes</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-y border-white/6 bg-white/[0.02] px-6 py-20 md:px-10">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-2xl">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">What ships</div>
+              <h2 className="mt-4 font-serif-ui text-3xl leading-[0.98] tracking-[-0.03em] text-white md:text-5xl">
+                Everything a startup needs to turn raw telemetry into a repeatable product.
+              </h2>
+            </div>
+
+            <div className="mt-10 grid gap-4 lg:grid-cols-3">
+              {features.map((feature) => (
+                <article
+                  key={feature.title}
+                  className="rounded-[28px] border border-white/8 bg-[#070b12] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.22)] transition-transform duration-300 hover:-translate-y-1"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/8 bg-white/5 text-white">
+                    <feature.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-5 font-serif-ui text-2xl tracking-[-0.02em] text-white">{feature.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-zinc-400 font-ui">{feature.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-6 py-20 md:px-10">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-2xl">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">How it works</div>
+                <h2 className="mt-4 font-serif-ui text-3xl leading-[0.98] tracking-[-0.03em] text-white md:text-5xl">
+                  A simple path from upload to answer.
+                </h2>
+              </div>
+              <p className="max-w-lg text-sm leading-7 text-zinc-400 font-ui">
+                The interface now behaves like a real startup homepage: clear promise, clear proof, and a clear next step.
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-              {pipelineSteps.map((step) => (
-                <div key={step.step} className="glass-card rounded-2xl border border-zinc-900/80 p-6">
-                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.35em] text-zinc-500">
+            <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {steps.map((step) => (
+                <div key={step.step} className="rounded-[24px] border border-white/8 bg-white/4 p-5 font-ui">
+                  <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.28em] text-zinc-500">
                     <span>{step.step}</span>
-                    <step.icon className="h-4 w-4 text-indigo-300" />
+                    <Workflow className="h-4 w-4 text-white/70" />
                   </div>
-                  <h3 className="mt-6 text-sm font-bold uppercase tracking-[0.18em] text-white">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-zinc-400">{step.description}</p>
+                  <h3 className="mt-5 font-semibold uppercase tracking-[0.18em] text-white">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-zinc-400">{step.text}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="relative border-t border-zinc-900/80 bg-zinc-950/40 px-6 py-24 md:px-12 font-ui">
-          <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[1.25fr_0.75fr]">
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-[0.35em] text-indigo-400">Built for the stack</span>
-              <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
-                The UI is shaped for review, not just display.
-              </h2>
-              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
-                The remaining sections keep the same dark diagnostic tone, but shift from a dashboard mock to a clearer product narrative with modular cards and direct calls to action.
-              </p>
+        <section className="px-6 pb-24 md:px-10">
+          <div className="mx-auto max-w-7xl rounded-[32px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6 md:p-10">
+            <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">Designed for teams</div>
+                <h2 className="mt-4 font-serif-ui text-3xl leading-[0.98] tracking-[-0.03em] text-white md:text-5xl">
+                  The message is simple: upload the mess, get the answer.
+                </h2>
+                <p className="mt-5 max-w-xl text-sm leading-7 text-zinc-400 font-ui">
+                  This page now speaks like a startup product instead of a lab prototype. The copy is tighter, the hierarchy is stronger, and the visuals focus on confidence and clarity.
+                </p>
+              </div>
 
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="grid gap-3 font-ui">
                 {[
-                  "GitHub Models API",
-                  "Microsoft Phi-4",
-                  "Semantic Kernel SDK",
-                  "FastAPI backend",
-                  "Tailwind CSS + TypeScript",
-                ].map((label) => (
-                  <span
-                    key={label}
-                    className="rounded-full border border-zinc-900 bg-zinc-950 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400"
-                  >
-                    {label}
-                  </span>
+                  "Metric anomaly detection",
+                  "Log correlation across time windows",
+                  "Chat follow-up with citations",
+                  "Forensic report export",
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[#0b0f16] p-4">
+                    <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                    <span className="text-sm text-white">{item}</span>
+                  </div>
                 ))}
-              </div>
-            </div>
-
-            <div className="glass-card rounded-3xl border border-zinc-900/80 p-6 md:p-8">
-              <div className="flex items-center gap-2 text-xs font-semibold text-white">
-                <Radar className="h-4 w-4 text-emerald-400" />
-                <span>Product summary</span>
-              </div>
-              <div className="mt-6 space-y-4 text-sm text-zinc-400">
-                <div className="flex items-start gap-3 rounded-2xl border border-zinc-900/80 bg-zinc-950/80 p-4">
-                  <CheckCircle className="mt-0.5 h-4 w-4 text-emerald-400" />
-                  <p>Upload noisy files and let the pipeline normalize them automatically.</p>
-                </div>
-                <div className="flex items-start gap-3 rounded-2xl border border-zinc-900/80 bg-zinc-950/80 p-4">
-                  <CheckCircle className="mt-0.5 h-4 w-4 text-emerald-400" />
-                  <p>Compare metrics and logs inside a single forensic workspace.</p>
-                </div>
-                <div className="flex items-start gap-3 rounded-2xl border border-zinc-900/80 bg-zinc-950/80 p-4">
-                  <CheckCircle className="mt-0.5 h-4 w-4 text-emerald-400" />
-                  <p>Ask follow-up questions and trace the root cause without leaving the session.</p>
-                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="relative border-t border-zinc-900/60 px-6 py-20 md:px-12 font-ui">
-          <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-8 rounded-3xl border border-zinc-900/80 bg-zinc-950/60 p-8 md:flex-row md:items-center md:p-10">
+        <section className="border-t border-white/6 px-6 py-20 md:px-10 font-ui">
+          <div className="mx-auto flex max-w-7xl flex-col gap-6 rounded-[32px] border border-white/8 bg-white/4 p-6 md:flex-row md:items-center md:justify-between md:p-8">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.35em] text-indigo-400">Ready to inspect an incident</p>
-              <h2 className="mt-3 text-2xl font-black tracking-tight text-white md:text-3xl">
-                Jump into the console or read the docs.
+              <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500">Ready to launch</div>
+              <h2 className="mt-3 font-serif-ui text-3xl tracking-[-0.03em] text-white md:text-4xl">
+                Start with the console, then read the docs.
               </h2>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/app"
-                className="glow-btn-primary inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition-all duration-300 font-ui uppercase tracking-[0.18em]"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-zinc-950 transition-transform duration-300 hover:-translate-y-0.5"
               >
                 Launch Console <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/docs"
-                className="glow-btn-secondary inline-flex items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/60 px-6 py-3 text-sm font-semibold text-zinc-300 transition-all duration-300 font-ui uppercase tracking-[0.18em]"
+                className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/4 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white transition-colors duration-300 hover:bg-white/8"
               >
                 Read Technical Docs
               </Link>
@@ -252,23 +348,14 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="relative border-t border-zinc-900/60 bg-[#030307]/90 px-8 py-12 flex flex-col sm:flex-row items-center justify-between gap-6 z-10 font-ui">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-zinc-500">
-            © 2026 Meshloop ARCA. All rights reserved. Automated operations forensics.
-          </span>
-        </div>
-
-        <div className="flex items-center gap-6 text-xs font-medium">
-          <Link href="/docs" className="text-zinc-500 hover:text-zinc-300 transition-colors">
-            Docs
-          </Link>
-          <Link href="/terms" className="text-zinc-500 hover:text-zinc-300 transition-colors">
-            Terms of Service
-          </Link>
-          <Link href="/privacy" className="text-zinc-500 hover:text-zinc-300 transition-colors">
-            Privacy Policy
-          </Link>
+      <footer className="border-t border-white/6 px-6 py-10 font-ui md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-xs uppercase tracking-[0.22em] text-zinc-500 md:flex-row md:items-center md:justify-between">
+          <span>Meshloop ARCA © 2026</span>
+          <div className="flex gap-4">
+            <Link href="/docs" className="transition-colors hover:text-white">Docs</Link>
+            <Link href="/terms" className="transition-colors hover:text-white">Terms</Link>
+            <Link href="/privacy" className="transition-colors hover:text-white">Privacy</Link>
+          </div>
         </div>
       </footer>
     </div>
