@@ -87,12 +87,12 @@ const pipelineSteps = [
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen bg-background text-foreground font-sans antialiased selection:bg-zinc-800 selection:text-zinc-100 bg-dot-grid">
+    <div className="relative min-h-screen bg-background text-foreground antialiased selection:bg-zinc-800 selection:text-zinc-100 bg-dot-grid">
       <div className="absolute top-0 left-1/4 w-[600px] h-[400px] ambient-glow -translate-y-1/2" />
       <div className="absolute top-[40%] right-1/4 w-[800px] h-[500px] ambient-glow" style={{ opacity: 0.7 }} />
       <div className="absolute bottom-0 left-1/3 w-[700px] h-[400px] ambient-glow translate-y-1/3" />
 
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-900/60 bg-[#030307]/75 backdrop-blur-md px-6 md:px-12 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-50 w-full border-b border-zinc-900/60 bg-[#030307]/75 backdrop-blur-md px-6 md:px-12 h-16 flex items-center justify-between font-ui">
         <div className="flex items-center gap-3">
           <div className="relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
@@ -109,12 +109,12 @@ export default function LandingPage() {
         </div>
 
         <div className="flex items-center gap-6">
-          <Link href="/docs" className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors font-medium">
+          <Link href="/docs" className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors font-medium tracking-wide uppercase">
             Docs
           </Link>
           <Link
             href="/app"
-            className="glow-btn-primary bg-white text-zinc-950 text-xs font-bold px-4 py-2 rounded-full transition-all duration-300"
+            className="glow-btn-primary bg-white text-zinc-950 text-xs font-bold px-4 py-2 rounded-full transition-all duration-300 tracking-wide uppercase"
           >
             Launch Console
           </Link>
@@ -130,7 +130,7 @@ export default function LandingPage() {
           icons={heroIcons}
         />
 
-        <section className="relative border-t border-zinc-900/80 bg-zinc-900/10 px-6 py-20 md:px-12">
+        <section className="relative border-t border-zinc-900/80 bg-zinc-900/10 px-6 py-20 md:px-12 font-ui">
           <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
             {capabilityCards.map((card) => (
               <div
@@ -140,17 +140,17 @@ export default function LandingPage() {
                 <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-950 text-indigo-300">
                   <card.icon className="h-5 w-5" />
                 </div>
-                <h2 className="text-sm font-bold uppercase tracking-wide text-white">{card.title}</h2>
+                <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-white">{card.title}</h2>
                 <p className="mt-3 text-sm leading-relaxed text-zinc-400">{card.description}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="relative border-t border-zinc-900/80 px-6 py-24 md:px-12">
+        <section className="relative border-t border-zinc-900/80 px-6 py-24 md:px-12 font-ui">
           <div className="mx-auto max-w-5xl">
             <div className="mb-12 max-w-2xl">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">How it works</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.35em] text-indigo-400">How it works</span>
               <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
                 A compact pipeline for incident triage.
               </h2>
@@ -162,11 +162,11 @@ export default function LandingPage() {
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
               {pipelineSteps.map((step) => (
                 <div key={step.step} className="glass-card rounded-2xl border border-zinc-900/80 p-6">
-                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-zinc-500">
+                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.35em] text-zinc-500">
                     <span>{step.step}</span>
                     <step.icon className="h-4 w-4 text-indigo-300" />
                   </div>
-                  <h3 className="mt-6 text-sm font-bold uppercase tracking-wide text-white">{step.title}</h3>
+                  <h3 className="mt-6 text-sm font-bold uppercase tracking-[0.18em] text-white">{step.title}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400">{step.description}</p>
                 </div>
               ))}
@@ -174,10 +174,10 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative border-t border-zinc-900/80 bg-zinc-950/40 px-6 py-24 md:px-12">
+        <section className="relative border-t border-zinc-900/80 bg-zinc-950/40 px-6 py-24 md:px-12 font-ui">
           <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[1.25fr_0.75fr]">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Built for the stack</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.35em] text-indigo-400">Built for the stack</span>
               <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
                 The UI is shaped for review, not just display.
               </h2>
@@ -195,7 +195,7 @@ export default function LandingPage() {
                 ].map((label) => (
                   <span
                     key={label}
-                    className="rounded-full border border-zinc-900 bg-zinc-950 px-4 py-1.5 text-[10px] font-semibold text-zinc-400"
+                    className="rounded-full border border-zinc-900 bg-zinc-950 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400"
                   >
                     {label}
                   </span>
@@ -226,10 +226,10 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative border-t border-zinc-900/60 px-6 py-20 md:px-12">
+        <section className="relative border-t border-zinc-900/60 px-6 py-20 md:px-12 font-ui">
           <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-8 rounded-3xl border border-zinc-900/80 bg-zinc-950/60 p-8 md:flex-row md:items-center md:p-10">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Ready to inspect an incident</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.35em] text-indigo-400">Ready to inspect an incident</p>
               <h2 className="mt-3 text-2xl font-black tracking-tight text-white md:text-3xl">
                 Jump into the console or read the docs.
               </h2>
@@ -237,13 +237,13 @@ export default function LandingPage() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/app"
-                className="glow-btn-primary inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition-all duration-300"
+                className="glow-btn-primary inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition-all duration-300 font-ui uppercase tracking-[0.18em]"
               >
                 Launch Console <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/docs"
-                className="glow-btn-secondary inline-flex items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/60 px-6 py-3 text-sm font-semibold text-zinc-300 transition-all duration-300"
+                className="glow-btn-secondary inline-flex items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/60 px-6 py-3 text-sm font-semibold text-zinc-300 transition-all duration-300 font-ui uppercase tracking-[0.18em]"
               >
                 Read Technical Docs
               </Link>
@@ -252,7 +252,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="relative border-t border-zinc-900/60 bg-[#030307]/90 px-8 py-12 flex flex-col sm:flex-row items-center justify-between gap-6 z-10">
+      <footer className="relative border-t border-zinc-900/60 bg-[#030307]/90 px-8 py-12 flex flex-col sm:flex-row items-center justify-between gap-6 z-10 font-ui">
         <div className="flex items-center gap-2">
           <span className="text-xs text-zinc-500">
             © 2026 Meshloop ARCA. All rights reserved. Automated operations forensics.
