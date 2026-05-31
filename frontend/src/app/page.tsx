@@ -84,6 +84,44 @@ const steps = [
   },
 ];
 
+const testimonials = [
+  {
+    name: "Riya Menon",
+    role: "Head of SRE, Northstar Retail",
+    quote:
+      "Meshloop cut our incident triage from two hours to fifteen minutes by correlating logs and metrics in one place.",
+  },
+  {
+    name: "Marcus Lee",
+    role: "Data Platform Lead, Atlas Fintech",
+    quote:
+      "The report output is leadership-ready. We no longer rewrite incident narratives manually after every outage.",
+  },
+];
+
+const securityPoints = [
+  "Session-scoped analysis and exports",
+  "Strict source attribution in chat responses",
+  "Human-readable audit trails for postmortems",
+];
+
+const plans = [
+  {
+    name: "Starter",
+    price: "$0",
+    detail: "For evaluation and hackathon workloads",
+    features: ["Sample analysis", "Incident summaries", "Single workspace"],
+    cta: "Start Free",
+  },
+  {
+    name: "Growth",
+    price: "$99/mo",
+    detail: "For teams handling weekly incidents",
+    features: ["Unlimited sessions", "Team collaboration", "Priority support"],
+    cta: "Talk to Sales",
+  },
+];
+
 export default function LandingPage() {
   return (
     <div className="relative min-h-screen bg-background text-foreground antialiased selection:bg-zinc-800 selection:text-zinc-100 bg-dot-grid">
@@ -108,7 +146,7 @@ export default function LandingPage() {
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
         </section>
 
-        <section className="border-b border-white/6 px-6 py-8 font-ui md:px-10">
+        <section id="customers" className="border-b border-white/6 px-6 py-8 font-ui md:px-10">
           <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
             {stats.map((stat) => (
               <div key={stat.label} className="rounded-2xl border border-white/8 bg-white/3 p-5 backdrop-blur-sm">
@@ -117,9 +155,23 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+          <div className="mx-auto mt-5 grid max-w-7xl gap-3 text-[10px] uppercase tracking-[0.22em] text-zinc-500 md:grid-cols-3">
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3">
+              <span className="text-emerald-300">MTTR Reduced</span>
+              <p className="mt-1 text-xs tracking-[0.06em] text-zinc-200">Median triage time drops from hours to minutes.</p>
+            </div>
+            <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/8 px-4 py-3">
+              <span className="text-indigo-300">Source Coverage</span>
+              <p className="mt-1 text-xs tracking-[0.06em] text-zinc-200">Metrics and logs are analyzed in one pass.</p>
+            </div>
+            <div className="rounded-2xl border border-white/15 bg-white/6 px-4 py-3">
+              <span className="text-zinc-200">Executive Clarity</span>
+              <p className="mt-1 text-xs tracking-[0.06em] text-zinc-200">Reports are ready for engineering and leadership syncs.</p>
+            </div>
+          </div>
         </section>
 
-        <section className="px-6 py-20 md:px-10">
+        <section id="product" className="px-6 py-20 md:px-10">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr]">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/4 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-zinc-400 font-ui">
@@ -129,7 +181,7 @@ export default function LandingPage() {
                 A startup-grade operating layer for messy operational data.
               </h2>
               <p className="mt-6 max-w-xl text-base leading-7 text-zinc-400 font-ui">
-                The homepage is now positioned like a real product: a single clear promise, a fast path to the console, and enough proof to make the value obvious in seconds.
+                Bring spreadsheets, logs, and context into one operator workspace. ARCA detects anomalies, links likely causes, and writes a concise incident brief.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3 font-ui">
@@ -209,7 +261,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="border-y border-white/6 bg-white/[0.02] px-6 py-20 md:px-10">
+        <section id="features" className="border-y border-white/6 bg-white/[0.02] px-6 py-20 md:px-10">
           <div className="mx-auto max-w-7xl">
             <div className="max-w-2xl">
               <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">What ships</div>
@@ -245,7 +297,7 @@ export default function LandingPage() {
                 </h2>
               </div>
               <p className="max-w-lg text-sm leading-7 text-zinc-400 font-ui">
-                The interface now behaves like a real startup homepage: clear promise, clear proof, and a clear next step.
+                Four clear stages keep teams aligned, from raw evidence to a shareable decision-ready summary.
               </p>
             </div>
 
@@ -264,30 +316,84 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="px-6 pb-24 md:px-10">
-          <div className="mx-auto max-w-7xl rounded-[32px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6 md:p-10">
+        <section id="security" className="px-6 py-12 md:px-10">
+          <div className="mx-auto max-w-7xl rounded-[32px] border border-white/8 bg-[#070b12] p-6 md:p-8">
             <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
               <div>
-                <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">Designed for teams</div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">Security and governance</div>
                 <h2 className="mt-4 font-serif-ui text-3xl leading-[0.98] tracking-[-0.03em] text-white md:text-5xl">
-                  The message is simple: upload the mess, get the answer.
+                  Built for accountable incident operations.
                 </h2>
                 <p className="mt-5 max-w-xl text-sm leading-7 text-zinc-400 font-ui">
-                  This page now speaks like a startup product instead of a lab prototype. The copy is tighter, the hierarchy is stronger, and the visuals focus on confidence and clarity.
+                  Every generated answer can be traced to sources, exported, and reviewed by engineering, support, and leadership.
                 </p>
               </div>
 
               <div className="grid gap-3 font-ui">
-                {[
-                  "Metric anomaly detection",
-                  "Log correlation across time windows",
-                  "Chat follow-up with citations",
-                  "Forensic report export",
-                ].map((item) => (
+                {securityPoints.map((item) => (
                   <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[#0b0f16] p-4">
                     <ShieldCheck className="h-4 w-4 text-emerald-400" />
                     <span className="text-sm text-white">{item}</span>
                   </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="px-6 py-12 md:px-10">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-2xl">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">Customer stories</div>
+              <h2 className="mt-4 font-serif-ui text-3xl leading-[0.98] tracking-[-0.03em] text-white md:text-5xl">
+                Loved by operators who run mission-critical systems.
+              </h2>
+            </div>
+            <div className="mt-10 grid gap-4 lg:grid-cols-2">
+              {testimonials.map((item) => (
+                <article key={item.name} className="rounded-[28px] border border-white/8 bg-white/4 p-6">
+                  <p className="text-base leading-8 text-zinc-200 font-serif-ui">“{item.quote}”</p>
+                  <div className="mt-5 border-t border-white/10 pt-4">
+                    <div className="text-sm font-semibold text-white font-ui">{item.name}</div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-zinc-500 font-ui">{item.role}</div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="pricing" className="px-6 pb-24 md:px-10">
+          <div className="mx-auto max-w-7xl rounded-[32px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6 md:p-10">
+            <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-zinc-500 font-ui">Pricing</div>
+                <h2 className="mt-4 font-serif-ui text-3xl leading-[0.98] tracking-[-0.03em] text-white md:text-5xl">
+                  Plans that scale from pilot to production.
+                </h2>
+                <p className="mt-5 max-w-xl text-sm leading-7 text-zinc-400 font-ui">
+                  Start with the free experience, then move to team workflows with collaboration and support.
+                </p>
+              </div>
+
+              <div className="grid gap-3 font-ui md:grid-cols-2">
+                {plans.map((plan) => (
+                  <article key={plan.name} className="rounded-2xl border border-white/8 bg-[#0b0f16] p-5">
+                    <div className="text-xs uppercase tracking-[0.24em] text-zinc-500">{plan.name}</div>
+                    <div className="mt-2 font-serif-ui text-3xl text-white">{plan.price}</div>
+                    <p className="mt-2 text-sm text-zinc-400">{plan.detail}</p>
+                    <div className="mt-4 space-y-2 text-sm text-zinc-300">
+                      {plan.features.map((f) => (
+                        <div key={f} className="flex items-center gap-2">
+                          <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
+                          <span>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <button className="mt-5 w-full rounded-full border border-white/15 bg-white/6 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-white/12">
+                      {plan.cta}
+                    </button>
+                  </article>
                 ))}
               </div>
             </div>

@@ -12,9 +12,10 @@ export function Header() {
 
 	const links = [
 		{ label: 'Home', href: '/' },
-		{ label: 'Docs', href: '/docs' },
-		{ label: 'Console', href: '/app' },
-		{ label: 'Privacy', href: '/privacy' },
+		{ label: 'Product', href: '/#product' },
+		{ label: 'Features', href: '/#features' },
+		{ label: 'Customers', href: '/#customers' },
+		{ label: 'Pricing', href: '/#pricing' },
 	];
 
 	React.useEffect(() => {
@@ -60,10 +61,10 @@ export function Header() {
 						</Link>
 					))}
 					<Button variant="outline" asChild>
-						<Link href="/docs">Docs</Link>
+						<Link href="/docs">Documentation</Link>
 					</Button>
 					<Button asChild>
-						<Link href="/app">Get Started</Link>
+						<Link href="/app">Open Console</Link>
 					</Button>
 				</div>
 
@@ -103,12 +104,12 @@ export function Header() {
 					<div className="flex flex-col gap-2">
 						<Button variant="outline" className="w-full" asChild>
 							<Link href="/docs" onClick={() => setOpen(false)}>
-								Docs
+								Documentation
 							</Link>
 						</Button>
 						<Button className="w-full" asChild>
 							<Link href="/app" onClick={() => setOpen(false)}>
-								Get Started
+								Open Console
 							</Link>
 						</Button>
 					</div>
