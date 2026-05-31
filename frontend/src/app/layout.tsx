@@ -16,6 +16,11 @@ const geistSans = Geist({
 export const metadata = {
   title: "Meshloop ARCA — Autonomous Root-Cause Analyst",
   description: "Fusing structured database metrics with unstructured logs to autonomously diagnose operational failures.",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

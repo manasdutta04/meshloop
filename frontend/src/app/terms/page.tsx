@@ -15,14 +15,7 @@ export default function TermsPage() {
       <nav className="h-16 border-b border-zinc-900/60 bg-[#030307]/75 backdrop-blur-md px-6 md:px-12 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded blur opacity-20 group-hover:opacity-50 transition duration-300"></div>
-              <img 
-                src="/logo.png" 
-                alt="Meshloop Logo" 
-                className="relative w-8 h-8 rounded-lg object-cover border border-zinc-800/80 bg-zinc-950" 
-              />
-            </div>
+            <img src="/logo.png" alt="Meshloop Logo" className="w-8 h-8 object-contain" />
             <div className="flex flex-col">
               <span className="font-extrabold text-sm tracking-tight text-white leading-none">Meshloop</span>
               <span className="text-[9px] text-zinc-500 font-mono mt-0.5">Terms</span>

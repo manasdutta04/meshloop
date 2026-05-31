@@ -93,14 +93,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 border-b border-white/6 bg-[#030307]/72 backdrop-blur-xl font-ui">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 md:px-10">
           <Link href="/" className="flex items-center gap-3">
-            <div className="relative">
-              <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-br from-white/40 via-white/10 to-transparent blur-sm" />
-              <img
-                src="/logo.png"
-                alt="Meshloop Logo"
-                className="relative h-9 w-9 rounded-xl border border-white/10 object-cover"
-              />
-            </div>
+            <img src="/logo.png" alt="Meshloop Logo" className="h-9 w-9 object-contain" />
             <div className="leading-tight">
               <div className="text-sm font-semibold tracking-[0.22em] text-white uppercase">Meshloop</div>
               <div className="text-[10px] tracking-[0.28em] text-zinc-500 uppercase">Autonomous Root-Cause Analyst</div>
@@ -353,14 +346,7 @@ export default function LandingPage() {
           <div className="grid gap-8 lg:grid-cols-[1.35fr_0.7fr_0.7fr_0.85fr] lg:gap-10">
             <div>
               <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-br from-white/25 to-transparent blur-sm" />
-                  <img
-                    src="/logo.png"
-                    alt="Meshloop Logo"
-                    className="relative h-10 w-10 rounded-xl border border-white/10 object-cover"
-                  />
-                </div>
+                <img src="/logo.png" alt="Meshloop Logo" className="h-10 w-10 object-contain" />
                 <div>
                   <div className="text-sm font-semibold tracking-[0.22em] text-white uppercase">Meshloop</div>
                   <div className="text-[10px] tracking-[0.28em] text-zinc-500 uppercase">Incident intelligence for modern teams</div>
