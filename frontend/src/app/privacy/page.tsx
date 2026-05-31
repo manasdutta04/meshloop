@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
-import { Header } from "@/components/ui/header-2";
+import { Header } from "../../components/ui/header-2";
 
 export default function PrivacyPage() {
   return (

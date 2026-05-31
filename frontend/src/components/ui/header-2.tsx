@@ -1,10 +1,10 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { MenuToggleIcon } from '@/components/ui/menu-toggle-icon';
-import { useScroll } from '@/components/ui/use-scroll';
+import { Button, buttonVariants } from './button';
+import { cn } from '../../lib/utils';
+import { MenuToggleIcon } from './menu-toggle-icon';
+import { useScroll } from './use-scroll';
 
 export function Header() {
 	const [open, setOpen] = React.useState(false);

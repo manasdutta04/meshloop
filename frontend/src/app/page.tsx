@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 import { FloatingIconsHero, type FloatingIconsHeroProps } from "../components/ui/floating-icons-hero-section";
-import { Header } from "@/components/ui/header-2";
+import { Header } from "../components/ui/header-2";
 
 const heroIcons: FloatingIconsHeroProps["icons"] = [
   { id: 1, icon: Database, className: "top-[10%] left-[8%]" },

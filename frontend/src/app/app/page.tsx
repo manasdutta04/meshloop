@@ -31,7 +31,20 @@ import {
   DownloadCloud
 } from "lucide-react";
 import Link from "next/link";
-import { Header } from "@/components/ui/header-2";
+import { Header } from "../../components/ui/header-2";
+
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
+
+const apiUrl = (path: string) => `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+
+const humanizeFetchError = (err: unknown) => {
+  if (err instanceof TypeError) {
+    return `Cannot reach backend at ${API_BASE_URL}. Start the API server with: uvicorn main:app --port 8000 --reload`;
+  }
+  if (err instanceof Error && err.message) return err.message;
+  return "Unknown error";
+};
+
 
 export default function AppHome() {
   // Application states
@@ -117,7 +130,7 @@ export default function AppHome() {
         });
       }, 500);
 
-      const response = await fetch("http://localhost:8000/api/analyze", {
+      const response = await fetch(apiUrl("/api/analyze"), {
         method: "POST",
         body: formData,
       });
@@ -137,9 +150,9 @@ export default function AppHome() {
         setLoading(false);
       }, 800);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(`Analysis failed: ${err.message || "Unknown error"}`);
+      alert(`Analysis failed: ${humanizeFetchError(err)}`);
       setLoading(false);
     }
   };
@@ -168,7 +181,7 @@ export default function AppHome() {
         });
       }, 400);
 
-      const response = await fetch("http://localhost:8000/api/analyze/sample", {
+      const response = await fetch(apiUrl("/api/analyze/sample"), {
         method: "POST",
       });
 
@@ -187,9 +200,9 @@ export default function AppHome() {
         setLoading(false);
       }, 800);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(`Sample analysis failed: ${err.message || "Unknown error"}`);
+      alert(`Sample analysis failed: ${humanizeFetchError(err)}`);
       setLoading(false);
     }
   };
@@ -205,7 +218,7 @@ export default function AppHome() {
     setChatLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/chat", {
+      const response = await fetch(apiUrl("/api/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -232,7 +245,7 @@ export default function AppHome() {
       console.error(err);
       setChatHistory((prev) => [
         ...prev,
-        { role: "assistant", content: "Error connecting to AI chat agent. Please check if backend is running." }
+        { role: "assistant", content: `Error connecting to AI chat agent. ${humanizeFetchError(err)}` }
       ]);
     } finally {
       setChatLoading(false);
@@ -250,7 +263,7 @@ export default function AppHome() {
   // Helper to download report
   const handleDownloadReport = () => {
     if (!result) return;
-    window.open(`http://localhost:8000/api/export/report?session_id=${result.session_id}`, "_blank");
+    window.open(apiUrl(`/api/export/report?session_id=${result.session_id}`), "_blank");
   };
 
   // Clear states to upload a new file
@@ -268,34 +281,7 @@ export default function AppHome() {
       <div className="absolute top-0 left-1/4 w-[500px] h-[300px] ambient-glow -translate-y-1/2" />
       <div className="absolute top-0 right-1/4 w-[500px] h-[300px] ambient-glow -translate-y-1/2" />
 
-      {/* TOP HEADER / NAVBAR */}
-      <header className="h-16 border-b border-zinc-900/60 bg-[#030307]/75 backdrop-blur-md px-6 md:px-12 flex items-center justify-between shrink-0 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
-            <img src="/logo.png" alt="Meshloop Logo" className="w-8 h-8 object-contain" />
-            <div className="flex flex-col">
-              <span className="font-extrabold text-sm tracking-tight text-white leading-none">Meshloop</span>
-              <span className="text-[9px] text-zinc-500 font-mono mt-0.5">ARCA Console</span>
-            </div>
-          </Link>
-          <span className="text-[9px] text-indigo-400 font-mono px-2 py-0.5 rounded-full border border-indigo-900/50 bg-indigo-950/30">
-            v1.2-beta
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-900/80 bg-zinc-950/60 backdrop-blur-sm">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-            </span>
-            <span className="text-[10px] text-zinc-400 font-semibold font-mono">API Connection Active</span>
-          </div>
-          <Link href="/docs" className="text-zinc-400 hover:text-zinc-200 transition-colors text-xs font-semibold">
-            Docs
-          </Link>
-        </div>
-      </header>
+      <Header />
 
       {/* WORKSPACE AREA */}
       <main className="flex-1 max-w-5xl w-full mx-auto p-6 md:p-10 flex flex-col justify-start gap-8 z-10">
@@ -490,44 +476,50 @@ export default function AppHome() {
               })}
             </div>
 
-            <Header />
-                      <p className="text-xs text-zinc-400 leading-relaxed">
-                        {result.discovery.top_insight.description}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Incident cards list */}
-                  <div className="space-y-4">
-                    <span className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block">Analyzed Incidents & Anomaly Details</span>
-                    {result.discovery.insights.map((ins: any, idx: number) => {
-                      const sev = ins.severity?.toLowerCase() || "low";
-                      const sevBorderMap: Record<string, string> = {
-                        critical: "border-red-900/40 bg-red-950/5 text-red-400",
-                        high: "border-orange-900/40 bg-orange-950/5 text-orange-400",
-                        medium: "border-yellow-900/40 bg-yellow-950/5 text-yellow-400",
-                        low: "border-emerald-900/40 bg-emerald-950/5 text-emerald-400",
-                      };
-                      return (
-                        <div key={idx} className={`border p-5 rounded-xl flex flex-col gap-3 transition-colors ${sevBorderMap[sev] || "border-zinc-850 bg-zinc-900"}`}>
-                          <div className="flex justify-between items-center gap-4">
-                            <span className="font-extrabold text-xs text-zinc-200">{ins.title}</span>
-                            <span className="text-[8px] font-mono px-2 py-0.5 rounded-full border uppercase tracking-wider bg-zinc-950/80 border-zinc-800/80 font-bold">
-                              {sev}
-                            </span>
-                          </div>
-                          <p className="text-xs text-zinc-400 leading-relaxed font-medium">{ins.description}</p>
-                          {ins.data_evidence && Object.keys(ins.data_evidence).length > 0 && (
-                            <div className="bg-zinc-950/80 border border-zinc-900 rounded-lg p-3 text-[10px] font-mono text-zinc-500 overflow-x-auto">
-                              Evidence: {JSON.stringify(ins.data_evidence, null, 2)}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+            {/* TAB 1: DISCOVERIES */}
+            {activeTab === "discoveries" && (
+              <div className="space-y-6">
+                {result.discovery.top_insight && (
+                  <div className="glass-card p-5 rounded-xl border-l-2 border-indigo-500/40">
+                    <span className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-2">Top Insight</span>
+                    <p className="text-xs font-bold text-zinc-200 mb-1">{result.discovery.top_insight.title}</p>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      {result.discovery.top_insight.description}
+                    </p>
                   </div>
+                )}
+
+                {/* Incident cards list */}
+                <div className="space-y-4">
+                  <span className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block">Analyzed Incidents &amp; Anomaly Details</span>
+                  {result.discovery.insights.map((ins: any, idx: number) => {
+                    const sev = ins.severity?.toLowerCase() || "low";
+                    const sevBorderMap: Record<string, string> = {
+                      critical: "border-red-900/40 bg-red-950/5 text-red-400",
+                      high: "border-orange-900/40 bg-orange-950/5 text-orange-400",
+                      medium: "border-yellow-900/40 bg-yellow-950/5 text-yellow-400",
+                      low: "border-emerald-900/40 bg-emerald-950/5 text-emerald-400",
+                    };
+                    return (
+                      <div key={idx} className={`border p-5 rounded-xl flex flex-col gap-3 transition-colors ${sevBorderMap[sev] || "border-zinc-850 bg-zinc-900"}`}>
+                        <div className="flex justify-between items-center gap-4">
+                          <span className="font-extrabold text-xs text-zinc-200">{ins.title}</span>
+                          <span className="text-[8px] font-mono px-2 py-0.5 rounded-full border uppercase tracking-wider bg-zinc-950/80 border-zinc-800/80 font-bold">
+                            {sev}
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-400 leading-relaxed font-medium">{ins.description}</p>
+                        {ins.data_evidence && Object.keys(ins.data_evidence).length > 0 && (
+                          <div className="bg-zinc-950/80 border border-zinc-900 rounded-lg p-3 text-[10px] font-mono text-zinc-500 overflow-x-auto">
+                            Evidence: {JSON.stringify(ins.data_evidence, null, 2)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
+              </div>
+            )}
 
               {/* TAB 2: VISUAL ANALYTICS */}
               {activeTab === "visuals" && (
@@ -791,14 +783,14 @@ export default function AppHome() {
                               </div>
                               <div className="flex gap-2">
                                 <a 
-                                  href={`http://localhost:8000/api/export/cleaned?session_id=${result.session_id}&filename=${fname}`}
+                                  href={apiUrl(`/api/export/cleaned?session_id=${result.session_id}&filename=${encodeURIComponent(fname)}`)}
                                   target="_blank"
                                   className="bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-350 hover:text-zinc-200 font-bold text-xs px-3.5 py-2 rounded-lg transition-all duration-300 shadow-sm"
                                 >
                                   Cleaned CSV
                                 </a>
                                 <a 
-                                  href={`http://localhost:8000/api/export/balanced?session_id=${result.session_id}&filename=${fname}`}
+                                  href={apiUrl(`/api/export/balanced?session_id=${result.session_id}&filename=${encodeURIComponent(fname)}`)}
                                   target="_blank"
                                   className="bg-white hover:bg-zinc-200 text-zinc-950 font-extrabold text-xs px-3.5 py-2 rounded-lg transition-all duration-300 shadow-sm"
                                 >
@@ -843,7 +835,6 @@ export default function AppHome() {
                 </div>
               )}
 
-            </div>
           </div>
         )}
       </main>
