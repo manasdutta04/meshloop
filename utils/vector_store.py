@@ -63,6 +63,8 @@ def store_dataset(ingestion_result: dict, cleaned_result: dict, session_id: str)
     cleaned_corpora = cleaned_result.get("cleaned_corpora", {})
     
     # 1. Index DataFrames (structured tables)
+    max_rows_per_file = 12
+    max_log_chunks_per_file = 120
     for filename, df in cleaned_dfs.items():
         if df is None or len(df) == 0:
             continue
@@ -106,8 +108,8 @@ def store_dataset(ingestion_result: dict, cleaned_result: dict, session_id: str)
                 "region": "unknown"
             })
             
-        # Store row chunks (up to 25 rows to keep indexing fast and within limits)
-        for i, row in df.head(25).iterrows():
+        # Store row chunks (capped to reduce embedding pressure and latency)
+        for i, row in df.head(max_rows_per_file).iterrows():
             row_dict = row.to_dict()
             
             # Extract tags from row
@@ -150,7 +152,7 @@ def store_dataset(ingestion_result: dict, cleaned_result: dict, session_id: str)
             else:
                 chunks.append(p)
                 
-        for i, chunk in enumerate(chunks):
+        for i, chunk in enumerate(chunks[:max_log_chunks_per_file]):
             if not chunk.strip():
                 continue
                 

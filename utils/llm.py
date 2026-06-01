@@ -41,6 +41,7 @@ _cache = {}
 _lock = threading.RLock()
 _demo_mode = ContextVar("meshloop_demo_mode", default=False)
 _warned_embedding_fallback = False
+_warned_prod_rate_limit_fallback = False
 
 
 @contextmanager
@@ -54,6 +55,11 @@ def demo_mode(enabled: bool):
 
 def _is_demo_mode() -> bool:
     return bool(_demo_mode.get())
+
+
+def _is_rate_limit_error(err: Exception | str) -> bool:
+    msg = str(err).lower()
+    return "429" in msg or "too many requests" in msg or "rate limit" in msg or "rate-limited" in msg
 
 with _lock:
     if CACHE_FILE.exists():
@@ -222,7 +228,7 @@ def get_embedding(text: str) -> list[float]:
     """
     # Truncate to 8000 chars to stay within token limits
     text = (text or "")[:8000]
-    global _warned_embedding_fallback
+    global _warned_embedding_fallback, _warned_prod_rate_limit_fallback
 
     def _pseudo_embedding(s: str, dim: int = EMBEDDING_DIM):
         # Use 1536 to match text-embedding-3-small / production embedding dimension
@@ -278,8 +284,17 @@ def get_embedding(text: str) -> list[float]:
 
         raise RuntimeError(last_error or "timeout")
     except Exception as e:
-        if not demo:
+        if not demo and not _is_rate_limit_error(e):
             raise RuntimeError(f"Embedding request failed: {e}")
+        if not demo and _is_rate_limit_error(e):
+            if not _warned_prod_rate_limit_fallback:
+                print("Embedding API rate-limited. Using local retrieval embeddings for this run.")
+                _warned_prod_rate_limit_fallback = True
+            vec = _pseudo_embedding(text)
+            with _lock:
+                _cache[cache_key] = vec
+                _save_cache()
+            return vec
         if not _warned_embedding_fallback:
             print(f"Embedding request failed: {e}. Using pseudo-embedding fallback (demo mode).")
             _warned_embedding_fallback = True
@@ -317,7 +332,7 @@ def get_embeddings(texts: list[str]) -> list[list[float]]:
                 missing_texts.append(normalized[i])
 
     if missing_texts:
-        global _warned_embedding_fallback
+        global _warned_embedding_fallback, _warned_prod_rate_limit_fallback
 
         def _pseudo_embedding(s: str, dim: int = EMBEDDING_DIM):
             seed = int(hashlib.md5(s.encode('utf-8')).hexdigest()[:16], 16)
@@ -329,30 +344,41 @@ def get_embeddings(texts: list[str]) -> list[list[float]]:
                 raise RuntimeError("No GitHub token configured for embeddings.")
             computed = [_pseudo_embedding(t) for t in missing_texts]
         else:
-            last_error = None
-            computed = None
-            for attempt in range(3):
-                try:
-                    response = _client.embeddings.create(
-                        model="text-embedding-3-small",
-                        input=missing_texts,
-                        timeout=45,
-                    )
-                    # API returns outputs aligned to input order
-                    computed = [_validate_embedding(item.embedding, missing_texts[idx]) for idx, item in enumerate(response.data)]
-                    break
-                except Exception as e:
-                    last_error = e
-                    if attempt < 2:
-                        time.sleep(1.5 * (attempt + 1))
+            batch_size = 32
+            computed = []
+            for start in range(0, len(missing_texts), batch_size):
+                batch = missing_texts[start:start + batch_size]
+                last_error = None
+                batch_result = None
+                for attempt in range(3):
+                    try:
+                        response = _client.embeddings.create(
+                            model="text-embedding-3-small",
+                            input=batch,
+                            timeout=45,
+                        )
+                        batch_result = [_validate_embedding(item.embedding, batch[idx]) for idx, item in enumerate(response.data)]
+                        break
+                    except Exception as e:
+                        last_error = e
+                        if attempt < 2:
+                            time.sleep(1.5 * (attempt + 1))
 
-            if computed is None:
-                if not demo:
-                    raise RuntimeError(f"Embedding request failed: {last_error or 'timeout'}")
-                if not _warned_embedding_fallback:
-                    print(f"Embedding request failed: {last_error or 'timeout'}. Using pseudo-embedding fallback (demo mode).")
-                    _warned_embedding_fallback = True
-                computed = [_pseudo_embedding(t) for t in missing_texts]
+                if batch_result is None:
+                    if demo:
+                        if not _warned_embedding_fallback:
+                            print(f"Embedding request failed: {last_error or 'timeout'}. Using pseudo-embedding fallback (demo mode).")
+                            _warned_embedding_fallback = True
+                        batch_result = [_pseudo_embedding(t) for t in batch]
+                    elif _is_rate_limit_error(last_error or ""):
+                        if not _warned_prod_rate_limit_fallback:
+                            print("Embedding API rate-limited. Using local retrieval embeddings for this run.")
+                            _warned_prod_rate_limit_fallback = True
+                        batch_result = [_pseudo_embedding(t) for t in batch]
+                    else:
+                        raise RuntimeError(f"Embedding request failed: {last_error or 'timeout'}")
+
+                computed.extend(batch_result)
 
         with _lock:
             for idx, vec in zip(missing_indices, computed):
