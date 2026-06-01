@@ -60,7 +60,7 @@ async def analyze_files(files: List[UploadFile] = File(...)):
             file_path = tmp_zip.name
 
         # Run pipeline
-        result = run_pipeline(file_path)
+        result = run_pipeline(file_path, demo_mode_enabled=False)
         
         # Save result to our in-memory session store
         session_id = result["session_id"]
@@ -107,7 +107,7 @@ async def analyze_sample():
         raise HTTPException(status_code=404, detail="Sample data not found")
         
     try:
-        result = run_pipeline(sample_path)
+        result = run_pipeline(sample_path, demo_mode_enabled=True)
         session_id = result["session_id"]
         _sessions[session_id] = result
         
@@ -139,7 +139,8 @@ async def chat_with_data(req: ChatRequest):
     Handles RAG incident-room chat query.
     """
     try:
-        resp = answer_question(req.question, req.session_id, req.data_summary)
+        session = _sessions.get(req.session_id, {})
+        resp = answer_question(req.question, req.session_id, req.data_summary, demo_mode=session.get("demo_mode", False))
         return resp
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chat agent error: {str(e)}")

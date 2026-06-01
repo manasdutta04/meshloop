@@ -11,10 +11,12 @@ import hashlib
 import random
 from pathlib import Path
 import threading
+from contextlib import contextmanager
+from contextvars import ContextVar
 from openai import OpenAI
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env", override=False)
 
 # One client — GitHub Models endpoint, OpenAI-compatible
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -22,7 +24,8 @@ _client = OpenAI(
     base_url="https://models.github.ai/inference",
     api_key=GITHUB_TOKEN or None,
 )
-USE_REMOTE_EMBEDDINGS = bool(GITHUB_TOKEN)
+USE_REMOTE_EMBEDDINGS = bool(GITHUB_TOKEN) and os.getenv("USE_REMOTE_EMBEDDINGS", "true").lower() != "false"
+CACHE_TEXT_RESPONSES = os.getenv("CACHE_TEXT_RESPONSES", "false").lower() == "true"
 
 # Expected embedding dimension for text-embedding-3-small
 EMBEDDING_DIM = 1536
@@ -33,8 +36,24 @@ PHI4 = "microsoft/phi-4"   # Microsoft model — use for simple/fast tasks
 
 # Simple file-backed cache to survive restarts and conserve rate limits
 CACHE_FILE = Path(".llm_cache.json")
+CACHE_VERSION = "v2"
 _cache = {}
 _lock = threading.RLock()
+_demo_mode = ContextVar("meshloop_demo_mode", default=False)
+_warned_embedding_fallback = False
+
+
+@contextmanager
+def demo_mode(enabled: bool):
+    token = _demo_mode.set(enabled)
+    try:
+        yield
+    finally:
+        _demo_mode.reset(token)
+
+
+def _is_demo_mode() -> bool:
+    return bool(_demo_mode.get())
 
 with _lock:
     if CACHE_FILE.exists():
@@ -60,13 +79,25 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
     Has retry logic for rate limit handling.
     """
     model = PHI4 if fast else GPT4O
+    demo = _is_demo_mode()
+    cache_key = hashlib.md5(f"{CACHE_VERSION}_{'demo' if demo else 'prod'}_{model}_{temperature}_{prompt}".encode()).hexdigest()
 
     # Check cache first
-    with _lock:
-        cache_key = hashlib.md5(f"{model}_{temperature}_{prompt}".encode()).hexdigest()
-        if cache_key in _cache:
-            print(f"[LLM Cache] Hit for {model}")
-            return _cache[cache_key]
+    if demo and CACHE_TEXT_RESPONSES:
+        with _lock:
+            if cache_key in _cache:
+                print(f"[LLM Cache] Hit for {model}")
+                return _cache[cache_key]
+
+    if not GITHUB_TOKEN:
+        if demo:
+            result = _local_text_response(prompt, fast=fast)
+            if CACHE_TEXT_RESPONSES:
+                with _lock:
+                    _cache[cache_key] = result
+                    _save_cache()
+            return result
+        raise RuntimeError("Remote LLM not configured. Normal uploads require AI-generated output.")
 
     # Exponential backoff with up to 5 attempts
     for attempt in range(5):
@@ -78,9 +109,10 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
                 max_tokens=1500,
             )
             result = response.choices[0].message.content.strip()
-            with _lock:
-                _cache[cache_key] = result
-                _save_cache()
+            if demo and CACHE_TEXT_RESPONSES:
+                with _lock:
+                    _cache[cache_key] = result
+                    _save_cache()
             return result
         except Exception as e:
             error_str = str(e)
@@ -100,12 +132,44 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
             time.sleep(2)
 
     # If we exhausted retries, provide a graceful fallback (avoid raising to keep UI stable)
-    fallback_msg = "[LLM unavailable due to rate limits or network errors. Try again later or use smaller datasets.]"
-    print("LLM fallback engaged after repeated failures.")
-    with _lock:
-        _cache[cache_key] = fallback_msg
-        _save_cache()
-    return fallback_msg
+    if demo:
+        fallback_msg = "[LLM unavailable due to rate limits or network errors. Try again later or use smaller datasets.]"
+        print("LLM fallback engaged after repeated failures.")
+        return _local_text_response(prompt, fast=fast, fallback=fallback_msg)
+
+    raise RuntimeError("LLM request failed after retries. Normal uploads require AI-generated output.")
+
+
+def _local_text_response(prompt: str, fast: bool = False, fallback: str = "") -> str:
+    """Deterministic local response when remote LLMs are unavailable."""
+    lower = prompt.lower()
+
+    if "suggest exactly 3 short follow-up questions" in lower:
+        return json.dumps([
+            "What is the strongest evidence in the retrieved data?",
+            "Which file or column shows the biggest anomaly?",
+            "What should be validated next in the source data?",
+        ])
+
+    if "respond only with valid json" in lower:
+        if "insights" in lower:
+            return json.dumps({"insights": []})
+        return json.dumps({})
+
+    if "executive summary" in lower or "business audience" in lower:
+        return "The dataset contains clear signals worth reviewing, with the strongest findings appearing in the retrieved metrics and related source logs. Start with the top anomaly, then verify the linked files before acting."
+
+    if "you are meshloop" in lower or "forensic data analyst" in lower:
+        return (
+            "I could not reach the remote model, but the retrieved context still points to the most relevant source files and anomalies. "
+            "Review the highlighted chunks, compare the metric drop to the associated log events, and validate the exact file names cited in the context. "
+            "💡 Action: inspect the top source file and confirm whether the same pattern repeats around the incident window."
+        )
+
+    if fallback:
+        return fallback
+
+    return "Remote LLM unavailable. Review the retrieved context and source files for the most relevant evidence."
 
 
 def call_llm_json(prompt: str) -> dict:
@@ -156,10 +220,20 @@ def get_embedding(text: str) -> list[float]:
     """
     # Truncate to 8000 chars to stay within token limits
     text = (text or "")[:8000]
+    global _warned_embedding_fallback
+
+    def _pseudo_embedding(s: str, dim: int = EMBEDDING_DIM):
+        # Use 1536 to match text-embedding-3-small / production embedding dimension
+        seed = int(hashlib.md5(s.encode('utf-8')).hexdigest()[:16], 16)
+        rnd = random.Random(seed)
+        # Values in range [-0.5, 0.5]
+        vec = [rnd.random() - 0.5 for _ in range(dim)]
+        return vec
 
     # Check cache first
+    demo = _is_demo_mode()
     with _lock:
-        cache_key = hashlib.md5(f"embedding_{text}".encode()).hexdigest()
+        cache_key = hashlib.md5(f"{CACHE_VERSION}_{'demo' if demo else 'prod'}_embedding_{text}".encode()).hexdigest()
         if cache_key in _cache:
             vec = _cache[cache_key]
             try:
@@ -171,7 +245,9 @@ def get_embedding(text: str) -> list[float]:
 
     try:
         if not USE_REMOTE_EMBEDDINGS:
-            raise RuntimeError("No GitHub token configured; using pseudo-embedding fallback.")
+            if not demo:
+                raise RuntimeError("No GitHub token configured for embeddings.")
+            return _pseudo_embedding(text)
 
         # Call embedding API in a background thread with a short timeout to avoid long blocking on rate-limits
         result_container = {}
@@ -191,7 +267,9 @@ def get_embedding(text: str) -> list[float]:
         t.join(8)  # wait up to 8 seconds
         if t.is_alive() or 'error' in result_container:
             err = result_container.get('error', 'timeout')
-            print(f"Embedding request failed or timed out ({err}). Using pseudo-embedding fallback.")
+            if not _warned_embedding_fallback:
+                print(f"Embedding request failed or timed out ({err}). Using pseudo-embedding fallback.")
+                _warned_embedding_fallback = True
             raise RuntimeError(err)
 
         result = result_container.get('embedding')
@@ -199,21 +277,17 @@ def get_embedding(text: str) -> list[float]:
             raise RuntimeError("Embedding API returned no result")
 
         result = _validate_embedding(result, text)
-        with _lock:
-            _cache[cache_key] = result
-            _save_cache()
+        if demo:
+            with _lock:
+                _cache[cache_key] = result
+                _save_cache()
         return result
     except Exception as e:
-        print(f"Embedding request failed: {e}. Using pseudo-embedding fallback.")
-        # Deterministic pseudo-embedding fallback (keeps system functional under rate limits)
-        def _pseudo_embedding(s: str, dim: int = EMBEDDING_DIM):
-            # Use 1536 to match text-embedding-3-small / production embedding dimension
-            seed = int(hashlib.md5(s.encode('utf-8')).hexdigest()[:16], 16)
-            rnd = random.Random(seed)
-            # Values in range [-0.5, 0.5]
-            vec = [rnd.random() - 0.5 for _ in range(dim)]
-            return vec
-
+        if not _is_demo_mode():
+            raise RuntimeError(f"Embedding request failed: {e}")
+        if not _warned_embedding_fallback:
+            print(f"Embedding request failed: {e}. Using pseudo-embedding fallback.")
+            _warned_embedding_fallback = True
         vec = _pseudo_embedding(text)
         with _lock:
             _cache[cache_key] = vec

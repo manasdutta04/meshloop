@@ -108,9 +108,12 @@ export default function AppHome() {
 
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 120000);
+    let interval: ReturnType<typeof setInterval> | undefined;
 
     try {
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         setProgressPercent((prev) => {
           if (prev < 40) {
             setProgressMsg("📂 Reading and parsing mixed-modal files...");
@@ -132,9 +135,8 @@ export default function AppHome() {
       const response = await fetch(apiUrl("/api/analyze"), {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       });
-
-      clearInterval(interval);
 
       if (!response.ok) {
         throw new Error(await response.text());
@@ -151,8 +153,14 @@ export default function AppHome() {
 
     } catch (err: unknown) {
       console.error(err);
-      alert(`Analysis failed: ${humanizeFetchError(err)}`);
+      const message = err instanceof DOMException && err.name === "AbortError"
+        ? "Analysis timed out. The backend took too long to respond."
+        : humanizeFetchError(err);
+      alert(`Analysis failed: ${message}`);
       setLoading(false);
+    } finally {
+      if (interval) clearInterval(interval);
+      window.clearTimeout(timeoutId);
     }
   };
 
@@ -163,9 +171,12 @@ export default function AppHome() {
     setChatHistory([]);
     setProgressPercent(15);
     setProgressMsg("📂 Loading sample data (messy_sales.csv + server_log.txt)...");
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 120000);
+    let interval: ReturnType<typeof setInterval> | undefined;
 
     try {
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         setProgressPercent((prev) => {
           if (prev < 50) return prev + 8;
           if (prev < 85) {
@@ -182,9 +193,8 @@ export default function AppHome() {
 
       const response = await fetch(apiUrl("/api/analyze/sample"), {
         method: "POST",
+        signal: controller.signal,
       });
-
-      clearInterval(interval);
 
       if (!response.ok) {
         throw new Error(await response.text());
@@ -201,8 +211,14 @@ export default function AppHome() {
 
     } catch (err: unknown) {
       console.error(err);
-      alert(`Sample analysis failed: ${humanizeFetchError(err)}`);
+      const message = err instanceof DOMException && err.name === "AbortError"
+        ? "Sample analysis timed out. The backend took too long to respond."
+        : humanizeFetchError(err);
+      alert(`Sample analysis failed: ${message}`);
       setLoading(false);
+    } finally {
+      if (interval) clearInterval(interval);
+      window.clearTimeout(timeoutId);
     }
   };
 
@@ -215,11 +231,14 @@ export default function AppHome() {
     setChatHistory((prev) => [...prev, userMsg]);
     setChatInput("");
     setChatLoading(true);
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 45000);
 
     try {
       const response = await fetch(apiUrl("/api/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           session_id: result.session_id,
           question: q,
@@ -248,6 +267,7 @@ export default function AppHome() {
       ]);
     } finally {
       setChatLoading(false);
+      window.clearTimeout(timeoutId);
     }
   };
 
