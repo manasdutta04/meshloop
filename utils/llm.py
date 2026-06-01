@@ -99,14 +99,15 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
             return result
         raise RuntimeError("Remote LLM not configured. Normal uploads require AI-generated output.")
 
-    # Exponential backoff with up to 5 attempts
-    for attempt in range(5):
+    # Retry with bounded timeout so discovery cannot hang indefinitely
+    for attempt in range(3):
         try:
             response = _client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
                 max_tokens=1500,
+                timeout=45,
             )
             result = response.choices[0].message.content.strip()
             if demo and CACHE_TEXT_RESPONSES:
@@ -118,8 +119,8 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
             error_str = str(e)
             # Detect rate-limit like errors and back off
             if "rate" in error_str.lower() or "429" in error_str or "Too many requests" in error_str:
-                wait = (2 ** attempt) * 5
-                print(f"LLM rate limit detected. Backing off {wait}s (attempt {attempt+1}/5)")
+                wait = (2 ** attempt) * 2
+                print(f"LLM rate limit detected. Backing off {wait}s (attempt {attempt+1}/3)")
                 time.sleep(wait)
                 # If using high-quality model and hitting limits, try fast model as a fallback
                 if not fast:
@@ -128,8 +129,9 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
                     print("Switching to fast/fallback model (Phi-4)")
                 continue
             # Non-rate-limit error: short sleep then retry
-            print(f"LLM call error (attempt {attempt+1}/5): {e}")
-            time.sleep(2)
+            print(f"LLM call error (attempt {attempt+1}/3): {e}")
+            if attempt < 2:
+                time.sleep(1.5)
 
     # If we exhausted retries, provide a graceful fallback (avoid raising to keep UI stable)
     if demo:
@@ -247,52 +249,119 @@ def get_embedding(text: str) -> list[float]:
         if not USE_REMOTE_EMBEDDINGS:
             if not demo:
                 raise RuntimeError("No GitHub token configured for embeddings.")
-            return _pseudo_embedding(text)
+            vec = _pseudo_embedding(text)
+            with _lock:
+                _cache[cache_key] = vec
+                _save_cache()
+            return vec
 
-        # Call embedding API in a background thread with a short timeout to avoid long blocking on rate-limits
-        result_container = {}
-
-        def _call_api():
+        # Production mode: retry a few times before failing the pipeline.
+        # Demo mode: if all retries fail, use pseudo embeddings.
+        last_error = None
+        for attempt in range(3):
             try:
                 response = _client.embeddings.create(
                     model="text-embedding-3-small",
                     input=text,
+                    timeout=30,
                 )
-                result_container['embedding'] = response.data[0].embedding
+                result = response.data[0].embedding
+                result = _validate_embedding(result, text)
+                with _lock:
+                    _cache[cache_key] = result
+                    _save_cache()
+                return result
             except Exception as e:
-                result_container['error'] = e
+                last_error = e
+                if attempt < 2:
+                    time.sleep(1.5 * (attempt + 1))
 
-        t = threading.Thread(target=_call_api, daemon=True)
-        t.start()
-        t.join(8)  # wait up to 8 seconds
-        if t.is_alive() or 'error' in result_container:
-            err = result_container.get('error', 'timeout')
-            if not _warned_embedding_fallback:
-                print(f"Embedding request failed or timed out ({err}). Using pseudo-embedding fallback.")
-                _warned_embedding_fallback = True
-            raise RuntimeError(err)
-
-        result = result_container.get('embedding')
-        if result is None:
-            raise RuntimeError("Embedding API returned no result")
-
-        result = _validate_embedding(result, text)
-        if demo:
-            with _lock:
-                _cache[cache_key] = result
-                _save_cache()
-        return result
+        raise RuntimeError(last_error or "timeout")
     except Exception as e:
-        if not _is_demo_mode():
+        if not demo:
             raise RuntimeError(f"Embedding request failed: {e}")
         if not _warned_embedding_fallback:
-            print(f"Embedding request failed: {e}. Using pseudo-embedding fallback.")
+            print(f"Embedding request failed: {e}. Using pseudo-embedding fallback (demo mode).")
             _warned_embedding_fallback = True
         vec = _pseudo_embedding(text)
         with _lock:
             _cache[cache_key] = vec
             _save_cache()
         return vec
+
+
+def get_embeddings(texts: list[str]) -> list[list[float]]:
+    """Batch embedding helper. Preserves order and uses cache per text."""
+    if not texts:
+        return []
+
+    demo = _is_demo_mode()
+    normalized = [(t or "")[:8000] for t in texts]
+    keys = [hashlib.md5(f"{CACHE_VERSION}_{'demo' if demo else 'prod'}_embedding_{t}".encode()).hexdigest() for t in normalized]
+
+    out: list[list[float] | None] = [None] * len(normalized)
+    missing_texts: list[str] = []
+    missing_indices: list[int] = []
+
+    with _lock:
+        for i, key in enumerate(keys):
+            vec = _cache.get(key)
+            if vec is None:
+                missing_indices.append(i)
+                missing_texts.append(normalized[i])
+                continue
+            try:
+                out[i] = _validate_embedding(vec, normalized[i])
+            except ValueError:
+                missing_indices.append(i)
+                missing_texts.append(normalized[i])
+
+    if missing_texts:
+        global _warned_embedding_fallback
+
+        def _pseudo_embedding(s: str, dim: int = EMBEDDING_DIM):
+            seed = int(hashlib.md5(s.encode('utf-8')).hexdigest()[:16], 16)
+            rnd = random.Random(seed)
+            return [rnd.random() - 0.5 for _ in range(dim)]
+
+        if not USE_REMOTE_EMBEDDINGS:
+            if not demo:
+                raise RuntimeError("No GitHub token configured for embeddings.")
+            computed = [_pseudo_embedding(t) for t in missing_texts]
+        else:
+            last_error = None
+            computed = None
+            for attempt in range(3):
+                try:
+                    response = _client.embeddings.create(
+                        model="text-embedding-3-small",
+                        input=missing_texts,
+                        timeout=45,
+                    )
+                    # API returns outputs aligned to input order
+                    computed = [_validate_embedding(item.embedding, missing_texts[idx]) for idx, item in enumerate(response.data)]
+                    break
+                except Exception as e:
+                    last_error = e
+                    if attempt < 2:
+                        time.sleep(1.5 * (attempt + 1))
+
+            if computed is None:
+                if not demo:
+                    raise RuntimeError(f"Embedding request failed: {last_error or 'timeout'}")
+                if not _warned_embedding_fallback:
+                    print(f"Embedding request failed: {last_error or 'timeout'}. Using pseudo-embedding fallback (demo mode).")
+                    _warned_embedding_fallback = True
+                computed = [_pseudo_embedding(t) for t in missing_texts]
+
+        with _lock:
+            for idx, vec in zip(missing_indices, computed):
+                out[idx] = vec
+                _cache[keys[idx]] = vec
+            _save_cache()
+
+    # Safety: keep output length aligned with input length.
+    return [out[i] if out[i] is not None else get_embedding(normalized[i]) for i in range(len(normalized))]
 
 
 # ── Quick test ────────────────────────────────────────────────────────

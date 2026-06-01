@@ -109,7 +109,7 @@ export default function AppHome() {
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 120000);
+    const timeoutId = window.setTimeout(() => controller.abort(), 600000);
     let interval: ReturnType<typeof setInterval> | undefined;
 
     try {
@@ -172,7 +172,7 @@ export default function AppHome() {
     setProgressPercent(15);
     setProgressMsg("📂 Loading sample data (messy_sales.csv + server_log.txt)...");
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 120000);
+    const timeoutId = window.setTimeout(() => controller.abort(), 300000);
     let interval: ReturnType<typeof setInterval> | undefined;
 
     try {

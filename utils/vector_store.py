@@ -3,7 +3,7 @@ import hashlib
 import pandas as pd
 import numpy as np
 import re
-from utils.llm import EMBEDDING_DIM, get_embedding
+from utils.llm import EMBEDDING_DIM, get_embedding, get_embeddings
 
 # In-memory ChromaDB client (resets on app restart — fine for hackathon)
 _chroma = chromadb.Client()
@@ -57,7 +57,7 @@ def store_dataset(ingestion_result: dict, cleaned_result: dict, session_id: str)
     Chunk the datasets into searchable pieces and store in ChromaDB with embeddings and date/region tags.
     """
     col = _get_collection(session_id)
-    docs, embeds, ids, metas = [], [], [], []
+    docs, ids, metas = [], [], []
     
     cleaned_dfs = cleaned_result.get("cleaned_dfs", {})
     cleaned_corpora = cleaned_result.get("cleaned_corpora", {})
@@ -97,7 +97,6 @@ def store_dataset(ingestion_result: dict, cleaned_result: dict, session_id: str)
                 
             uid = hashlib.md5(f"{session_id}_{filename}_col_{colname}".encode()).hexdigest()
             docs.append(chunk)
-            embeds.append(get_embedding(chunk))
             ids.append(uid)
             metas.append({
                 "type": "column", 
@@ -126,7 +125,6 @@ def store_dataset(ingestion_result: dict, cleaned_result: dict, session_id: str)
             chunk = f"Row {i} in Table '{filename}': {row_dict}"
             uid = hashlib.md5(f"{session_id}_{filename}_row_{i}".encode()).hexdigest()
             docs.append(chunk)
-            embeds.append(get_embedding(chunk))
             ids.append(uid)
             metas.append({
                 "type": "row",
@@ -161,7 +159,6 @@ def store_dataset(ingestion_result: dict, cleaned_result: dict, session_id: str)
             
             uid = hashlib.md5(f"{session_id}_{filename}_txt_{i}".encode()).hexdigest()
             docs.append(chunk)
-            embeds.append(get_embedding(chunk))
             ids.append(uid)
             metas.append({
                 "type": "log",
@@ -171,6 +168,7 @@ def store_dataset(ingestion_result: dict, cleaned_result: dict, session_id: str)
             })
             
     if docs:
+        embeds = get_embeddings(docs)
         _validate_embeddings(embeds, label='Document embedding')
         col.upsert(documents=docs, embeddings=embeds, ids=ids, metadatas=metas)
     return len(docs)
@@ -178,13 +176,12 @@ def store_dataset(ingestion_result: dict, cleaned_result: dict, session_id: str)
 def store_insights(insights: list, session_id: str):
     """Store insights in the vector store so the chat agent can reference them."""
     col = _get_collection(session_id)
-    docs, embeds, ids, metas = [], [], [], []
+    docs, ids, metas = [], [], []
     
     for i, ins in enumerate(insights):
         chunk = f"INSIGHT: {ins.get('title')}\n{ins.get('description')}"
         uid = hashlib.md5(f"{session_id}_ins_{i}".encode()).hexdigest()
         docs.append(chunk)
-        embeds.append(get_embedding(chunk))
         ids.append(uid)
         metas.append({
             "type": "insight", 
@@ -195,6 +192,7 @@ def store_insights(insights: list, session_id: str):
         })
     
     if docs:
+        embeds = get_embeddings(docs)
         col.upsert(documents=docs, embeddings=embeds, ids=ids, metadatas=metas)
 
 def search(query: str, session_id: str, n: int = 6, filter_dict: dict = None) -> list[dict]:
