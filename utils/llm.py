@@ -20,10 +20,6 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env", override=F
 
 # One client — GitHub Models endpoint, OpenAI-compatible
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-_client = OpenAI(
-    base_url="https://models.github.ai/inference",
-    api_key=GITHUB_TOKEN or None,
-)
 USE_REMOTE_EMBEDDINGS = bool(GITHUB_TOKEN) and os.getenv("USE_REMOTE_EMBEDDINGS", "true").lower() != "false"
 CACHE_TEXT_RESPONSES = os.getenv("CACHE_TEXT_RESPONSES", "false").lower() == "true"
 
@@ -42,6 +38,8 @@ _lock = threading.RLock()
 _demo_mode = ContextVar("meshloop_demo_mode", default=False)
 _warned_embedding_fallback = False
 _warned_prod_rate_limit_fallback = False
+_runtime_ai_config = ContextVar("meshloop_runtime_ai_config", default={})
+_client_cache: dict[tuple[str, str | None], OpenAI] = {}
 
 
 @contextmanager
@@ -55,6 +53,44 @@ def demo_mode(enabled: bool):
 
 def _is_demo_mode() -> bool:
     return bool(_demo_mode.get())
+
+
+@contextmanager
+def runtime_ai_config(config: dict):
+    token = _runtime_ai_config.set(config or {})
+    try:
+        yield
+    finally:
+        _runtime_ai_config.reset(token)
+
+
+def _current_ai_config() -> dict:
+    return _runtime_ai_config.get() or {}
+
+
+def _build_client() -> OpenAI:
+    cfg = _current_ai_config()
+    base_url = cfg.get("base_url") or "https://models.github.ai/inference"
+    api_key = cfg.get("api_key") or GITHUB_TOKEN or None
+    key = (base_url, api_key)
+    with _lock:
+        client = _client_cache.get(key)
+        if client is None:
+            client = OpenAI(base_url=base_url, api_key=api_key)
+            _client_cache[key] = client
+        return client
+
+
+def _chat_model(fast: bool = False) -> str:
+    cfg = _current_ai_config()
+    if cfg.get("chat_model"):
+        return cfg["chat_model"]
+    return PHI4 if fast else GPT4O
+
+
+def _embedding_model() -> str:
+    cfg = _current_ai_config()
+    return cfg.get("embedding_model") or "text-embedding-3-small"
 
 
 def _is_rate_limit_error(err: Exception | str) -> bool:
@@ -84,7 +120,7 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
     fast=False uses GPT-4o (higher quality, use for key tasks).
     Has retry logic for rate limit handling.
     """
-    model = PHI4 if fast else GPT4O
+    model = _chat_model(fast=fast)
     demo = _is_demo_mode()
     cache_key = hashlib.md5(f"{CACHE_VERSION}_{'demo' if demo else 'prod'}_{model}_{temperature}_{prompt}".encode()).hexdigest()
 
@@ -108,7 +144,7 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
     # Retry with bounded timeout so discovery cannot hang indefinitely
     for attempt in range(3):
         try:
-            response = _client.chat.completions.create(
+            response = _build_client().chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
@@ -129,7 +165,7 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
                 print(f"LLM rate limit detected. Backing off {wait}s (attempt {attempt+1}/3)")
                 time.sleep(wait)
                 # If using high-quality model and hitting limits, try fast model as a fallback
-                if not fast:
+                if not fast and not _current_ai_config().get("chat_model"):
                     fast = True
                     model = PHI4
                     print("Switching to fast/fallback model (Phi-4)")
@@ -266,8 +302,8 @@ def get_embedding(text: str) -> list[float]:
         last_error = None
         for attempt in range(3):
             try:
-                response = _client.embeddings.create(
-                    model="text-embedding-3-small",
+                response = _build_client().embeddings.create(
+                    model=_embedding_model(),
                     input=text,
                     timeout=30,
                 )
@@ -312,7 +348,7 @@ def get_embeddings(texts: list[str]) -> list[list[float]]:
 
     demo = _is_demo_mode()
     normalized = [(t or "")[:8000] for t in texts]
-    keys = [hashlib.md5(f"{CACHE_VERSION}_{'demo' if demo else 'prod'}_embedding_{t}".encode()).hexdigest() for t in normalized]
+    keys = [hashlib.md5(f"{CACHE_VERSION}_{'demo' if demo else 'prod'}_{_embedding_model()}_embedding_{t}".encode()).hexdigest() for t in normalized]
 
     out: list[list[float] | None] = [None] * len(normalized)
     missing_texts: list[str] = []
@@ -352,8 +388,8 @@ def get_embeddings(texts: list[str]) -> list[list[float]]:
                 batch_result = None
                 for attempt in range(3):
                     try:
-                        response = _client.embeddings.create(
-                            model="text-embedding-3-small",
+                        response = _build_client().embeddings.create(
+                            model=_embedding_model(),
                             input=batch,
                             timeout=45,
                         )

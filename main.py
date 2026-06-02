@@ -2,7 +2,7 @@ import os
 import tempfile
 import zipfile
 from typing import List, Dict, Any
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
@@ -12,6 +12,7 @@ import pandas as pd
 # Import our agents and pipeline
 from pipeline import run_pipeline
 from agents.chat import answer_question
+from utils.llm import runtime_ai_config
 
 app = FastAPI(title="Meshloop ARCA API", description="FastAPI Backend for Autonomous Root-Cause Analyst")
 
@@ -27,13 +28,23 @@ app.add_middleware(
 # In-memory session store (resets on restart - perfect for hackathon)
 _sessions: Dict[str, Dict[str, Any]] = {}
 
+
+def _ai_config_from_headers(headers) -> dict:
+    return {
+        "provider": headers.get("x-meshloop-provider", "github"),
+        "api_key": headers.get("x-meshloop-api-key") or None,
+        "base_url": headers.get("x-meshloop-base-url") or None,
+        "chat_model": headers.get("x-meshloop-chat-model") or None,
+        "embedding_model": headers.get("x-meshloop-embedding-model") or None,
+    }
+
 class ChatRequest(BaseModel):
     session_id: str
     question: str
     data_summary: Dict[str, Any]
 
 @app.post("/api/analyze")
-async def analyze_files(files: List[UploadFile] = File(...)):
+async def analyze_files(request: Request, files: List[UploadFile] = File(...)):
     """
     Ingests and runs the full ARCA analysis pipeline on uploaded files.
     If multiple files are uploaded, they are zipped together before parsing.
@@ -59,8 +70,10 @@ async def analyze_files(files: List[UploadFile] = File(...)):
             tmp_zip.close()
             file_path = tmp_zip.name
 
-        # Run pipeline
-        result = run_pipeline(file_path, demo_mode_enabled=False)
+        # Run pipeline with the caller's AI settings (BYO key / local OpenAI-compatible endpoint).
+        ai_config = _ai_config_from_headers(request.headers)
+        with runtime_ai_config(ai_config):
+            result = run_pipeline(file_path, demo_mode_enabled=False)
         
         # Save result to our in-memory session store
         session_id = result["session_id"]
@@ -98,7 +111,7 @@ async def analyze_files(files: List[UploadFile] = File(...)):
         raise HTTPException(status_code=500, detail=f"Pipeline error: {str(e)}")
 
 @app.post("/api/analyze/sample")
-async def analyze_sample():
+async def analyze_sample(request: Request):
     """
     Runs analysis on the included sample_data/arca_test_dataset.zip.
     """
@@ -107,7 +120,9 @@ async def analyze_sample():
         raise HTTPException(status_code=404, detail="Sample data not found")
         
     try:
-        result = run_pipeline(sample_path, demo_mode_enabled=True)
+        ai_config = _ai_config_from_headers(request.headers)
+        with runtime_ai_config(ai_config):
+            result = run_pipeline(sample_path, demo_mode_enabled=True)
         session_id = result["session_id"]
         _sessions[session_id] = result
         
@@ -134,13 +149,15 @@ async def analyze_sample():
         raise HTTPException(status_code=500, detail=f"Sample pipeline error: {str(e)}")
 
 @app.post("/api/chat")
-async def chat_with_data(req: ChatRequest):
+async def chat_with_data(request: Request, req: ChatRequest):
     """
     Handles RAG incident-room chat query.
     """
     try:
         session = _sessions.get(req.session_id, {})
-        resp = answer_question(req.question, req.session_id, req.data_summary, demo_mode=session.get("demo_mode", False))
+        ai_config = _ai_config_from_headers(request.headers)
+        with runtime_ai_config(ai_config):
+            resp = answer_question(req.question, req.session_id, req.data_summary, demo_mode=session.get("demo_mode", False))
         return resp
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chat agent error: {str(e)}")

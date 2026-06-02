@@ -46,12 +46,29 @@ const humanizeFetchError = (err: unknown) => {
 
 
 export default function AppHome() {
+  interface AIConfig {
+    provider: "github" | "openai-compatible";
+    baseUrl: string;
+    apiKey: string;
+    chatModel: string;
+    embeddingModel: string;
+  }
+
+  const defaultAIConfig: AIConfig = {
+    provider: "github",
+    baseUrl: "https://models.github.ai/inference",
+    apiKey: "",
+    chatModel: "gpt-4o",
+    embeddingModel: "text-embedding-3-small",
+  };
+
   // Application states
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
   const [progressMsg, setProgressMsg] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [aiConfig, setAIConfig] = useState<AIConfig>(defaultAIConfig);
   
   // Tab navigation
   const [activeTab, setActiveTab] = useState("discoveries");
@@ -71,6 +88,21 @@ export default function AppHome() {
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("meshloop-ai-config");
+    if (saved) {
+      try {
+        setAIConfig({ ...defaultAIConfig, ...JSON.parse(saved) });
+      } catch {
+        window.localStorage.removeItem("meshloop-ai-config");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("meshloop-ai-config", JSON.stringify(aiConfig));
+  }, [aiConfig]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -94,6 +126,19 @@ export default function AppHome() {
     if (e.dataTransfer.files) {
       setFiles(Array.from(e.dataTransfer.files));
     }
+  };
+
+  const buildAiHeaders = () => {
+    const headers: Record<string, string> = {
+      "X-Meshloop-Provider": aiConfig.provider,
+      "X-Meshloop-Base-Url": aiConfig.baseUrl,
+      "X-Meshloop-Chat-Model": aiConfig.chatModel,
+      "X-Meshloop-Embedding-Model": aiConfig.embeddingModel,
+    };
+    if (aiConfig.apiKey.trim()) {
+      headers["X-Meshloop-Api-Key"] = aiConfig.apiKey.trim();
+    }
+    return headers;
   };
 
   // Run pipeline analysis
@@ -134,6 +179,7 @@ export default function AppHome() {
 
       const response = await fetch(apiUrl("/api/analyze"), {
         method: "POST",
+        headers: buildAiHeaders(),
         body: formData,
         signal: controller.signal,
       });
@@ -193,6 +239,7 @@ export default function AppHome() {
 
       const response = await fetch(apiUrl("/api/analyze/sample"), {
         method: "POST",
+        headers: buildAiHeaders(),
         signal: controller.signal,
       });
 
@@ -237,7 +284,7 @@ export default function AppHome() {
     try {
       const response = await fetch(apiUrl("/api/chat"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...buildAiHeaders() },
         signal: controller.signal,
         body: JSON.stringify({
           session_id: result.session_id,
@@ -336,6 +383,96 @@ export default function AppHome() {
                 Ingest telemetry metrics spreadsheets (CSV/Excel) and text server logs (PDF/TXT/JSON). ARCA correlates drops with events to deliver audit reports.
               </p>
             </div>
+
+              <div className="w-full glass-card rounded-2xl border border-white/10 bg-white/4 p-5 mb-6">
+                <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-wider text-zinc-500">AI Connection</p>
+                    <h2 className="text-sm font-semibold text-white mt-1">Bring your own key or point to a local model endpoint</h2>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAIConfig({ ...defaultAIConfig, provider: "github" })}
+                      className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-[10px] font-bold text-zinc-200 hover:bg-zinc-900"
+                    >
+                      GitHub Models
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAIConfig({
+                        provider: "openai-compatible",
+                        baseUrl: "http://localhost:11434/v1",
+                        apiKey: "",
+                        chatModel: "llama3.1",
+                        embeddingModel: "nomic-embed-text",
+                      })}
+                      className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-[10px] font-bold text-zinc-200 hover:bg-zinc-900"
+                    >
+                      Local / Ollama
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="grid gap-1">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Provider</span>
+                    <select
+                      value={aiConfig.provider}
+                      onChange={(e) => setAIConfig((prev) => ({ ...prev, provider: e.target.value as AIConfig["provider"] }))}
+                      className="rounded-lg border border-zinc-900 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none"
+                    >
+                      <option value="github">GitHub Models</option>
+                      <option value="openai-compatible">OpenAI-compatible / Local</option>
+                    </select>
+                  </label>
+
+                  <label className="grid gap-1">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Base URL</span>
+                    <input
+                      value={aiConfig.baseUrl}
+                      onChange={(e) => setAIConfig((prev) => ({ ...prev, baseUrl: e.target.value }))}
+                      placeholder="https://models.github.ai/inference"
+                      className="rounded-lg border border-zinc-900 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none"
+                    />
+                  </label>
+
+                  <label className="grid gap-1">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">API Key</span>
+                    <input
+                      value={aiConfig.apiKey}
+                      onChange={(e) => setAIConfig((prev) => ({ ...prev, apiKey: e.target.value }))}
+                      placeholder="Paste your key here"
+                      type="password"
+                      className="rounded-lg border border-zinc-900 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none"
+                    />
+                  </label>
+
+                  <label className="grid gap-1">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Chat Model</span>
+                    <input
+                      value={aiConfig.chatModel}
+                      onChange={(e) => setAIConfig((prev) => ({ ...prev, chatModel: e.target.value }))}
+                      placeholder="gpt-4o or llama3.1"
+                      className="rounded-lg border border-zinc-900 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none"
+                    />
+                  </label>
+
+                  <label className="grid gap-1 md:col-span-2">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Embedding Model</span>
+                    <input
+                      value={aiConfig.embeddingModel}
+                      onChange={(e) => setAIConfig((prev) => ({ ...prev, embeddingModel: e.target.value }))}
+                      placeholder="text-embedding-3-small or nomic-embed-text"
+                      className="rounded-lg border border-zinc-900 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none"
+                    />
+                  </label>
+                </div>
+
+                <p className="mt-3 text-[10px] leading-5 text-zinc-500">
+                  For local privacy, point this at an OpenAI-compatible server such as Ollama or LM Studio. If your local endpoint supports embeddings, set the embedding model too; otherwise keep the default and the app will still analyze with your chosen chat model.
+                </p>
+              </div>
 
             {/* Upload Area styled as glassmorphic card */}
             <div className="w-full glass-card rounded-2xl shadow-xl p-6 transition-all duration-300">
