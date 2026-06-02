@@ -16,10 +16,12 @@ from utils.llm import runtime_ai_config
 
 app = FastAPI(title="Meshloop ARCA API", description="FastAPI Backend for Autonomous Root-Cause Analyst")
 
-# Enable CORS for Next.js app (running on port 3000 by default)
+# Enable CORS for Next.js app
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=allowed_origins,
+    allow_origin_regex=os.getenv("ALLOWED_ORIGIN_REGEX", r"https://.*\.vercel\.app"),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
