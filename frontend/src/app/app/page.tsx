@@ -46,7 +46,7 @@ const humanizeFetchError = (err: unknown) => {
 
 
 export default function AppHome() {
-  type ProviderKey = "anthropic" | "openai" | "google" | "ollama";
+  type ProviderKey = "anthropic" | "openai" | "google" | "ollama" | "groq";
 
   interface AIConfig {
     provider: ProviderKey;
@@ -69,6 +69,7 @@ export default function AppHome() {
     openai: "OpenAI",
     google: "Gemini",
     ollama: "Ollama",
+    groq: "Groq",
   };
 
   const PROVIDER_COLORS: Record<ProviderKey, string> = {
@@ -76,6 +77,7 @@ export default function AppHome() {
     openai: "text-emerald-400 bg-emerald-950/60 border-emerald-800/50",
     google: "text-blue-400 bg-blue-950/60 border-blue-800/50",
     ollama: "text-amber-400 bg-amber-950/60 border-amber-800/50",
+    groq: "text-orange-400 bg-orange-950/60 border-orange-800/50",
   };
 
   // Application states

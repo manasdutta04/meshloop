@@ -18,7 +18,7 @@ import {
   Zap,
 } from "lucide-react";
 
-type ProviderKey = "anthropic" | "openai" | "google" | "ollama";
+type ProviderKey = "anthropic" | "openai" | "google" | "ollama" | "groq";
 
 interface AIConfig {
   provider: ProviderKey;
@@ -69,13 +69,7 @@ const PROVIDERS: ProviderPreset[] = [
     modelExamples: ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
     embeddingExamples: ["voyage-3", "voyage-3-lite"],
     logo: (
-      <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none">
-        <path
-          d="M13.827 3.52h-3.654L6.583 20h3.332l.913-2.972h3.338l.921 2.972h3.332L13.827 3.52zm-2.258 11.09 1.111-3.614 1.11 3.614H11.57z"
-          fill="currentColor"
-          className="text-violet-300"
-        />
-      </svg>
+      <img src="/anthropic.svg" alt="Anthropic Claude" className="w-7 h-7 object-contain opacity-90" />
     ),
   },
   {
@@ -98,10 +92,7 @@ const PROVIDERS: ProviderPreset[] = [
     embeddingExamples: ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"],
     logo: (
       <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-        <path
-          d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.677l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.896zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z"
-          className="text-emerald-300"
-        />
+        <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.677l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.896zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" className="text-emerald-300" />
       </svg>
     ),
   },
@@ -124,29 +115,35 @@ const PROVIDERS: ProviderPreset[] = [
     modelExamples: ["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"],
     embeddingExamples: ["text-embedding-004", "embedding-001"],
     logo: (
-      <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none">
-        <path
-          d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"
-          fill="none"
-        />
-        <path
-          d="M12 4.5c0 3.584-2.916 6.5-6.5 6.5A6.5 6.5 0 0 0 12 17.5 6.5 6.5 0 0 0 18.5 11c-3.584 0-6.5-2.916-6.5-6.5z"
-          fill="#4285F4"
-          opacity="0.9"
-        />
-        <path
-          d="M12 19.5c0-3.584 2.916-6.5 6.5-6.5A6.5 6.5 0 0 0 12 6.5 6.5 6.5 0 0 0 5.5 13c3.584 0 6.5 2.916 6.5 6.5z"
-          fill="#34A853"
-          opacity="0.9"
-        />
-        <circle cx="12" cy="12" r="2.5" fill="white" opacity="0.95" />
-      </svg>
+      <img src="/gemini.svg" alt="Google Gemini" className="w-7 h-7 object-contain" />
+    ),
+  },
+  {
+    key: "groq",
+    name: "Groq",
+    tagline: "Ultra-fast LPU inference engine",
+    type: "cloud",
+    badge: "Cloud · Fast",
+    badgeColor: "text-orange-400 bg-orange-950/60 border-orange-800/50",
+    accentColor: "text-orange-300",
+    glowColor: "rgba(249, 115, 22, 0.1)",
+    iconBg: "bg-gradient-to-br from-orange-950 to-orange-900 border-orange-700/40",
+    borderColor: "border-zinc-800/60",
+    activeBorder: "border-orange-500/60",
+    defaultBaseUrl: "https://api.groq.com/openai/v1",
+    defaultChatModel: "llama-3.3-70b-versatile",
+    defaultEmbeddingModel: "nomic-embed-text",
+    requiresKey: true,
+    modelExamples: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768", "gemma2-9b-it"],
+    embeddingExamples: ["nomic-embed-text"],
+    logo: (
+      <img src="/groq.webp" alt="Groq" className="w-7 h-7 object-contain rounded" />
     ),
   },
   {
     key: "ollama",
     name: "Ollama (Local)",
-    tagline: "Run models privately on your machine",
+    tagline: "Run models privately on your machine — no API key, no cost, fully offline",
     type: "local",
     badge: "Local · Free",
     badgeColor: "text-amber-400 bg-amber-950/60 border-amber-800/50",
@@ -162,12 +159,7 @@ const PROVIDERS: ProviderPreset[] = [
     modelExamples: ["llama3.1", "mistral", "codellama", "qwen2.5"],
     embeddingExamples: ["nomic-embed-text", "mxbai-embed-large", "all-minilm"],
     logo: (
-      <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-        <path
-          d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm-1-5h2v2h-2zm0-8h2v6h-2z"
-          className="text-amber-300"
-        />
-      </svg>
+      <img src="/ollama.webp" alt="Ollama" className="w-7 h-7 object-contain rounded" />
     ),
   },
 ];
@@ -300,8 +292,10 @@ export default function SettingsPage() {
           <p className="text-[9px] font-black uppercase tracking-wider text-zinc-500 mb-3">
             Choose Provider
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {PROVIDERS.map((preset) => {
+
+          {/* Cloud providers — 2×2 grid */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {PROVIDERS.filter((p) => p.type === "cloud").map((preset) => {
               const isActive = config.provider === preset.key;
               return (
                 <button
@@ -318,37 +312,23 @@ export default function SettingsPage() {
                       : {}
                   }
                 >
-                  {/* Active indicator */}
                   {isActive && (
                     <span className="absolute top-3 right-3">
                       <CheckCircle className={`w-4 h-4 ${preset.accentColor}`} />
                     </span>
                   )}
-
                   <div className="flex items-start gap-3">
-                    {/* Icon */}
                     <div
                       className={`w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 ${preset.iconBg} transition-transform duration-300 ${isActive ? "scale-105" : "group-hover:scale-105"}`}
                     >
                       {preset.logo}
                     </div>
-
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                        <span className="text-sm font-bold text-white truncate">{preset.name}</span>
-                      </div>
-                      <p className="text-[10px] text-zinc-500 leading-relaxed mb-2 font-medium">
-                        {preset.tagline}
-                      </p>
+                      <span className="text-sm font-bold text-white block truncate mb-0.5">{preset.name}</span>
+                      <p className="text-[10px] text-zinc-500 leading-relaxed mb-2 font-medium">{preset.tagline}</p>
                       <div className="flex items-center gap-1.5">
-                        {preset.type === "cloud" ? (
-                          <Cloud className="w-3 h-3 text-zinc-600" />
-                        ) : (
-                          <Cpu className="w-3 h-3 text-zinc-600" />
-                        )}
-                        <span
-                          className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${preset.badgeColor}`}
-                        >
+                        <Cloud className="w-3 h-3 text-zinc-600" />
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${preset.badgeColor}`}>
                           {preset.badge}
                         </span>
                       </div>
@@ -358,6 +338,53 @@ export default function SettingsPage() {
               );
             })}
           </div>
+
+          {/* Local model — full-width wide card */}
+          {PROVIDERS.filter((p) => p.type === "local").map((preset) => {
+            const isActive = config.provider === preset.key;
+            return (
+              <button
+                key={preset.key}
+                onClick={() => selectProvider(preset)}
+                className={`relative w-full text-left p-4 rounded-xl border transition-all duration-300 group ${
+                  isActive
+                    ? `${preset.activeBorder} bg-zinc-900/80`
+                    : `${preset.borderColor} bg-zinc-950/40 hover:bg-zinc-900/50 hover:border-zinc-700/60`
+                }`}
+                style={
+                  isActive
+                    ? { boxShadow: `0 0 24px ${preset.glowColor}, inset 0 0 30px ${preset.glowColor}` }
+                    : {}
+                }
+              >
+                {isActive && (
+                  <span className="absolute top-3 right-3">
+                    <CheckCircle className={`w-4 h-4 ${preset.accentColor}`} />
+                  </span>
+                )}
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 ${preset.iconBg} transition-transform duration-300 ${isActive ? "scale-105" : "group-hover:scale-105"}`}
+                  >
+                    {preset.logo}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap mb-0.5">
+                      <span className="text-sm font-bold text-white">{preset.name}</span>
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${preset.badgeColor}`}>
+                        {preset.badge}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">{preset.tagline}</p>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-2 shrink-0 text-[10px] text-zinc-600 font-medium">
+                    <Cpu className="w-3.5 h-3.5" />
+                    <span>No internet required</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         {/* Configuration Panel */}
@@ -538,6 +565,23 @@ export default function SettingsPage() {
                   voyageai.com
                 </a>
                 .
+              </p>
+            </div>
+          )}
+          {activePreset.key === "groq" && (
+            <div className="mt-4 flex items-start gap-2 bg-orange-950/20 border border-orange-900/30 rounded-lg p-3">
+              <Zap className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
+              <p className="text-[10px] text-orange-300/70 leading-relaxed">
+                Get your free API key from{" "}
+                <a
+                  href="https://console.groq.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-400 underline underline-offset-2 hover:text-orange-300"
+                >
+                  console.groq.com
+                </a>
+                . Groq uses an OpenAI-compatible API — embeddings are not natively supported; use a separate embedding provider or set a passthrough model.
               </p>
             </div>
           )}
