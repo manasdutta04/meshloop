@@ -93,6 +93,18 @@ def _embedding_model() -> str:
     return cfg.get("embedding_model") or "text-embedding-3-small"
 
 
+# Providers whose base URLs are known to NOT support embeddings
+_NO_EMBEDDING_BASE_URLS = (
+    "api.groq.com",
+)
+
+
+def _provider_has_embeddings() -> bool:
+    """Returns False for providers (e.g. Groq) that don't expose an embeddings endpoint."""
+    base_url = (_current_ai_config().get("base_url") or "").lower()
+    return not any(domain in base_url for domain in _NO_EMBEDDING_BASE_URLS)
+
+
 def _is_rate_limit_error(err: Exception | str) -> bool:
     msg = str(err).lower()
     return "429" in msg or "too many requests" in msg or "rate limit" in msg or "rate-limited" in msg
@@ -288,7 +300,19 @@ def get_embedding(text: str) -> list[float]:
                 print(f"[LLM Cache] Found invalid embedding: {err}. Recomputing fallback with correct dim={EMBEDDING_DIM}.")
 
     try:
-        if not USE_REMOTE_EMBEDDINGS:
+        if not USE_REMOTE_EMBEDDINGS or not _provider_has_embeddings():
+            if not demo and not _provider_has_embeddings():
+                # Provider (e.g. Groq) has no embedding API — use pseudo-embeddings silently
+                global _warned_embedding_fallback
+                if not _warned_embedding_fallback:
+                    cfg_url = _current_ai_config().get("base_url", "")
+                    print(f"[Embeddings] Provider at '{cfg_url}' does not support embeddings. Using local pseudo-embeddings.")
+                    _warned_embedding_fallback = True
+                vec = _pseudo_embedding(text)
+                with _lock:
+                    _cache[cache_key] = vec
+                    _save_cache()
+                return vec
             if not demo:
                 raise RuntimeError("No GitHub token configured for embeddings.")
             vec = _pseudo_embedding(text)
@@ -375,10 +399,19 @@ def get_embeddings(texts: list[str]) -> list[list[float]]:
             rnd = random.Random(seed)
             return [rnd.random() - 0.5 for _ in range(dim)]
 
-        if not USE_REMOTE_EMBEDDINGS:
-            if not demo:
+        if not USE_REMOTE_EMBEDDINGS or not _provider_has_embeddings():
+            if not demo and not _provider_has_embeddings():
+                # Provider (e.g. Groq) has no embedding API — use pseudo-embeddings silently
+                global _warned_embedding_fallback
+                if not _warned_embedding_fallback:
+                    cfg_url = _current_ai_config().get("base_url", "")
+                    print(f"[Embeddings] Provider at '{cfg_url}' does not support embeddings. Using local pseudo-embeddings.")
+                    _warned_embedding_fallback = True
+                computed = [_pseudo_embedding(t) for t in missing_texts]
+            elif not demo:
                 raise RuntimeError("No GitHub token configured for embeddings.")
-            computed = [_pseudo_embedding(t) for t in missing_texts]
+            else:
+                computed = [_pseudo_embedding(t) for t in missing_texts]
         else:
             batch_size = 32
             computed = []

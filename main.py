@@ -52,11 +52,20 @@ async def analyze_files(request: Request, files: List[UploadFile] = File(...)):
     if not files:
         raise HTTPException(status_code=400, detail="No files uploaded")
 
+    # Capture the real original filenames before any temp-file wrapping
+    original_names = [f.filename for f in files if f.filename]
+    if len(original_names) == 1:
+        display_filename = original_names[0]
+    elif original_names:
+        display_filename = " + ".join(original_names)
+    else:
+        display_filename = "upload"
+
     # Create temporary zip file
     tmp_zip = tempfile.NamedTemporaryFile(delete=False, suffix=".zip")
     try:
         if len(files) == 1 and files[0].filename.lower().endswith(".zip"):
-            # Single zip file upload
+            # Single zip file upload — read content (already consumed filename above)
             content = await files[0].read()
             tmp_zip.write(content)
             tmp_zip.close()
@@ -74,11 +83,14 @@ async def analyze_files(request: Request, files: List[UploadFile] = File(...)):
         ai_config = _ai_config_from_headers(request.headers)
         with runtime_ai_config(ai_config):
             result = run_pipeline(file_path, demo_mode_enabled=False)
-        
+
+        # Patch the display name: replace the internal temp-zip name with the real upload name(s)
+        result["data_summary"]["file_name"] = display_filename
+
         # Save result to our in-memory session store
         session_id = result["session_id"]
         _sessions[session_id] = result
-        
+
         # Clean up temp file
         if os.path.exists(file_path):
             os.unlink(file_path)

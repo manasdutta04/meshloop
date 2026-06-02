@@ -132,10 +132,10 @@ const PROVIDERS: ProviderPreset[] = [
     activeBorder: "border-orange-500/60",
     defaultBaseUrl: "https://api.groq.com/openai/v1",
     defaultChatModel: "llama-3.3-70b-versatile",
-    defaultEmbeddingModel: "nomic-embed-text",
+    defaultEmbeddingModel: "",
     requiresKey: true,
     modelExamples: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768", "gemma2-9b-it"],
-    embeddingExamples: ["nomic-embed-text"],
+    embeddingExamples: [],
     logo: (
       <img src="/groq.webp" alt="Groq" className="w-7 h-7 object-contain rounded" />
     ),
@@ -581,7 +581,7 @@ export default function SettingsPage() {
                 >
                   console.groq.com
                 </a>
-                . Groq uses an OpenAI-compatible API — embeddings are not natively supported; use a separate embedding provider or set a passthrough model.
+                . <strong className="text-orange-400">Groq does not support embeddings</strong> — Meshloop will automatically use fast local pseudo-embeddings for RAG retrieval when Groq is selected.
               </p>
             </div>
           )}
