@@ -84,8 +84,15 @@ async def analyze_files(request: Request, files: List[UploadFile] = File(...)):
         with runtime_ai_config(ai_config):
             result = run_pipeline(file_path, demo_mode_enabled=False)
 
-        # Patch the display name: replace the internal temp-zip name with the real upload name(s)
+        # Patch the display name everywhere: temp zip → real upload name(s)
+        internal_name = result["ingestion"]["metadata"]["file_name"]  # e.g. "tmpXXX.zip"
         result["data_summary"]["file_name"] = display_filename
+        result["ingestion"]["metadata"]["file_name"] = display_filename
+        # Also fix the generated report text so the markdown body shows the real name
+        if internal_name and internal_name != display_filename:
+            result["report"]["report_text"] = result["report"]["report_text"].replace(
+                internal_name, display_filename
+            )
 
         # Save result to our in-memory session store
         session_id = result["session_id"]
