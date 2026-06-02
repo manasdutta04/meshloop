@@ -86,7 +86,8 @@ Raw Data Files (CSV/Excel spreadsheet metrics + PDF/JSON/TXT text logs)
 -   `main.py`: FastAPI backend REST service exposing endpoints for file uploads, analysis, RAG chat, and download exports.
 -   `pipeline.py`: Pipeline orchestrator linking the ingestion, cleaning, storing, discovery, and reporting modules.
 -   `frontend/`: Premium Next.js React client application.
-    -   `src/app/page.js`: Dashboard homepage managing state, upload boxes, SVG graphics, and chat dialogs.
+    -   `src/app/page.tsx`: Dashboard homepage managing state, upload boxes, SVG graphics, and chat dialogs.
+    -   `src/app/layout.tsx`: Root layout and site metadata configurations.
     -   `src/app/globals.css`: Customized CSS system for layout, space-dark aesthetic variables, and components.
 
 ---

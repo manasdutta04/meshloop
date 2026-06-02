@@ -1,36 +1,19 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Meshloop Frontend Client
+> Premium Next.js React Web Application for Meshloop Autonomous Root-Cause Analyst.
 
-## Getting Started
+## Features
+- **Upload Box**: Drag-and-drop support for single files or zipped archives containing metrics/logs.
+- **Incident Room Chat**: Interactive multi-turn chat with data RAG context, source citation badges, and suggestions powered by Phi-4.
+- **Root-Cause Anomaly Discoveries**: Severe anomaly discovery cards (Critical, High, Medium, Low) and auto-clearing report cards.
+- **Visual Analytics**: Interactive data analysis graphs matching dark-mode glassmorphic styling.
+- **TECHNICAL Pages**: Fully expanded technical documentation (`/docs`), terms (`/terms`), and privacy policy (`/privacy`).
+
+## Development
 
 First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
