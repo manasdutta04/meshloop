@@ -46,8 +46,10 @@ const humanizeFetchError = (err: unknown) => {
 
 
 export default function AppHome() {
+  type ProviderKey = "anthropic" | "openai" | "google" | "ollama";
+
   interface AIConfig {
-    provider: "github" | "openai-compatible";
+    provider: ProviderKey;
     baseUrl: string;
     apiKey: string;
     chatModel: string;
@@ -55,11 +57,25 @@ export default function AppHome() {
   }
 
   const defaultAIConfig: AIConfig = {
-    provider: "github",
-    baseUrl: "https://models.github.ai/inference",
+    provider: "openai",
+    baseUrl: "https://api.openai.com/v1",
     apiKey: "",
     chatModel: "gpt-4o",
     embeddingModel: "text-embedding-3-small",
+  };
+
+  const PROVIDER_LABELS: Record<ProviderKey, string> = {
+    anthropic: "Claude",
+    openai: "OpenAI",
+    google: "Gemini",
+    ollama: "Ollama",
+  };
+
+  const PROVIDER_COLORS: Record<ProviderKey, string> = {
+    anthropic: "text-violet-400 bg-violet-950/60 border-violet-800/50",
+    openai: "text-emerald-400 bg-emerald-950/60 border-emerald-800/50",
+    google: "text-blue-400 bg-blue-950/60 border-blue-800/50",
+    ollama: "text-amber-400 bg-amber-950/60 border-amber-800/50",
   };
 
   // Application states
@@ -93,16 +109,17 @@ export default function AppHome() {
     const saved = window.localStorage.getItem("meshloop-ai-config");
     if (saved) {
       try {
-        setAIConfig({ ...defaultAIConfig, ...JSON.parse(saved) });
+        const raw = JSON.parse(saved) as Record<string, unknown>;
+        // Migrate old provider keys
+        if (raw.provider === "github") raw.provider = "openai";
+        if (raw.provider === "openai-compatible") raw.provider = "ollama";
+        const parsed = raw as Partial<AIConfig>;
+        setAIConfig({ ...defaultAIConfig, ...parsed } as AIConfig);
       } catch {
         window.localStorage.removeItem("meshloop-ai-config");
       }
     }
   }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem("meshloop-ai-config", JSON.stringify(aiConfig));
-  }, [aiConfig]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -347,7 +364,7 @@ export default function AppHome() {
       <div className="absolute top-0 left-1/4 w-[500px] h-[300px] ambient-glow -translate-y-1/2" />
       <div className="absolute top-0 right-1/4 w-[500px] h-[300px] ambient-glow -translate-y-1/2" />
 
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[#030307]/80 supports-[backdrop-filter]:backdrop-blur-md">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#030307]/80 supports-[backdrop-filter]:backdrop-blur-md border-b border-white/[0.04]">
         <div className="max-w-5xl mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between h-12">
             <Link href="/" className="flex items-center gap-3">
@@ -356,6 +373,21 @@ export default function AppHome() {
             </Link>
 
             <div className="flex items-center gap-2">
+              {/* Active provider badge */}
+              <Link
+                href="/app/settings"
+                className={`hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-black uppercase tracking-wider transition-all hover:opacity-80 ${PROVIDER_COLORS[aiConfig.provider]}`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                {PROVIDER_LABELS[aiConfig.provider]}
+              </Link>
+              <Link
+                href="/app/settings"
+                className="flex items-center gap-1.5 text-zinc-400 hover:text-zinc-200 transition-colors text-xs font-medium px-2.5 py-1 rounded-md hover:bg-white/5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0"/><path d="M4.93 19.07a10 10 0 0 0 14.14 0"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+                Settings
+              </Link>
               <Link
                 href="/docs"
                 className="bg-white text-zinc-950 px-2.5 py-1 rounded-md font-semibold text-xs"
@@ -384,94 +416,25 @@ export default function AppHome() {
               </p>
             </div>
 
-              <div className="w-full glass-card rounded-2xl border border-white/10 bg-white/4 p-5 mb-6">
-                <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+              {/* AI Provider banner — links to /app/settings */}
+              <div className="w-full glass-card rounded-2xl border border-white/10 bg-white/4 p-4 mb-6 flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${PROVIDER_COLORS[aiConfig.provider]}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                    {PROVIDER_LABELS[aiConfig.provider]} Active
+                  </div>
                   <div>
-                    <p className="text-[9px] font-black uppercase tracking-wider text-zinc-500">AI Connection</p>
-                    <h2 className="text-sm font-semibold text-white mt-1">Bring your own key or point to a local model endpoint</h2>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setAIConfig({ ...defaultAIConfig, provider: "github" })}
-                      className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-[10px] font-bold text-zinc-200 hover:bg-zinc-900"
-                    >
-                      GitHub Models
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAIConfig({
-                        provider: "openai-compatible",
-                        baseUrl: "http://localhost:11434/v1",
-                        apiKey: "",
-                        chatModel: "llama3.1",
-                        embeddingModel: "nomic-embed-text",
-                      })}
-                      className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-[10px] font-bold text-zinc-200 hover:bg-zinc-900"
-                    >
-                      Local / Ollama
-                    </button>
+                    <p className="text-xs font-semibold text-white">{aiConfig.chatModel}</p>
+                    <p className="text-[10px] text-zinc-500">{aiConfig.embeddingModel}</p>
                   </div>
                 </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <label className="grid gap-1">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Provider</span>
-                    <select
-                      value={aiConfig.provider}
-                      onChange={(e) => setAIConfig((prev) => ({ ...prev, provider: e.target.value as AIConfig["provider"] }))}
-                      className="rounded-lg border border-zinc-900 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none"
-                    >
-                      <option value="github">GitHub Models</option>
-                      <option value="openai-compatible">OpenAI-compatible / Local</option>
-                    </select>
-                  </label>
-
-                  <label className="grid gap-1">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Base URL</span>
-                    <input
-                      value={aiConfig.baseUrl}
-                      onChange={(e) => setAIConfig((prev) => ({ ...prev, baseUrl: e.target.value }))}
-                      placeholder="https://models.github.ai/inference"
-                      className="rounded-lg border border-zinc-900 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none"
-                    />
-                  </label>
-
-                  <label className="grid gap-1">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">API Key</span>
-                    <input
-                      value={aiConfig.apiKey}
-                      onChange={(e) => setAIConfig((prev) => ({ ...prev, apiKey: e.target.value }))}
-                      placeholder="Paste your key here"
-                      type="password"
-                      className="rounded-lg border border-zinc-900 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none"
-                    />
-                  </label>
-
-                  <label className="grid gap-1">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Chat Model</span>
-                    <input
-                      value={aiConfig.chatModel}
-                      onChange={(e) => setAIConfig((prev) => ({ ...prev, chatModel: e.target.value }))}
-                      placeholder="gpt-4o or llama3.1"
-                      className="rounded-lg border border-zinc-900 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none"
-                    />
-                  </label>
-
-                  <label className="grid gap-1 md:col-span-2">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Embedding Model</span>
-                    <input
-                      value={aiConfig.embeddingModel}
-                      onChange={(e) => setAIConfig((prev) => ({ ...prev, embeddingModel: e.target.value }))}
-                      placeholder="text-embedding-3-small or nomic-embed-text"
-                      className="rounded-lg border border-zinc-900 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none"
-                    />
-                  </label>
-                </div>
-
-                <p className="mt-3 text-[10px] leading-5 text-zinc-500">
-                  For local privacy, point this at an OpenAI-compatible server such as Ollama or LM Studio. If your local endpoint supports embeddings, set the embedding model too; otherwise keep the default and the app will still analyze with your chosen chat model.
-                </p>
+                <Link
+                  href="/app/settings"
+                  className="flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-zinc-200 transition-colors px-3 py-1.5 rounded-lg border border-zinc-800/60 hover:border-zinc-700 hover:bg-zinc-900/50"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0"/><path d="M4.93 19.07a10 10 0 0 0 14.14 0"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+                  Change Provider
+                </Link>
               </div>
 
             {/* Upload Area styled as glassmorphic card */}
