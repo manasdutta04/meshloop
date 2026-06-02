@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
+
 import { 
   Upload, 
   Play, 
@@ -661,78 +662,116 @@ export default function AppHome() {
             )}
 
               {/* TAB 2: VISUAL ANALYTICS */}
-              {activeTab === "visuals" && (
-                <div className="space-y-6">
-                  <div className="glass-card p-5 rounded-xl">
-                    <span className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-4">Metric Charts</span>
-                    
-                    {result.report.chart_specs.length === 0 ? (
-                      <p className="text-xs text-zinc-600 text-center py-12">No visual analytics specs generated.</p>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {result.report.chart_specs.map((spec: any, idx: number) => {
-                          return (
-                            <div key={idx} className="bg-zinc-950/60 border border-zinc-900/80 p-5 rounded-xl flex flex-col gap-4">
-                              <span className="text-xs font-bold text-zinc-300 block font-mono">{spec.title}</span>
-                              
-                              <div className="w-full h-56 bg-zinc-900/10 border border-zinc-900/80 rounded-lg p-3 flex items-center justify-center relative">
-                                {spec.type === "histogram" || spec.type === "bar" ? (
-                                  <svg className="w-full h-full" viewBox="0 0 100 60">
-                                    <line x1="10" y1="50" x2="90" y2="50" stroke="#27272a" strokeWidth="0.5" />
-                                    <line x1="10" y1="10" x2="10" y2="50" stroke="#27272a" strokeWidth="0.5" />
-                                    {/* Flat rectangular bars */}
-                                    <rect x="22" y="25" width="6" height="25" fill="#52525b" rx="0.5" />
-                                    <rect x="37" y="15" width="6" height="35" fill="#52525b" rx="0.5" />
-                                    <rect x="52" y="40" width="6" height="10" fill="#f43f5e" rx="0.5" />
-                                    <rect x="67" y="20" width="6" height="30" fill="#52525b" rx="0.5" />
-                                    <text x="25" y="55" fill="#71717a" fontSize="3" textAnchor="middle">East</text>
-                                    <text x="40" y="55" fill="#71717a" fontSize="3" textAnchor="middle">West</text>
-                                    <text x="55" y="55" fill="#f43f5e" fontSize="3" textAnchor="middle" fontWeight="bold">Drop</text>
-                                    <text x="70" y="55" fill="#71717a" fontSize="3" textAnchor="middle">North</text>
-                                  </svg>
-                                ) : spec.type === "line" ? (
-                                  <svg className="w-full h-full" viewBox="0 0 100 60">
-                                    <line x1="10" y1="50" x2="90" y2="50" stroke="#27272a" strokeWidth="0.5" />
-                                    <line x1="10" y1="35" x2="90" y2="35" stroke="#18181b" strokeWidth="0.3" strokeDasharray="1" />
-                                    <line x1="10" y1="20" x2="90" y2="20" stroke="#18181b" strokeWidth="0.3" strokeDasharray="1" />
-                                    {/* Flat line chart */}
-                                    <path 
-                                      d="M 15 20 L 30 18 L 45 42 L 60 45 L 75 22 L 85 15" 
-                                      fill="none" 
-                                      stroke="#fafafa" 
-                                      strokeWidth="1.2"
-                                      strokeLinecap="square"
-                                    />
-                                    <circle cx="45" cy="42" r="1.5" fill="#f43f5e" />
-                                    <circle cx="60" cy="45" r="1.5" fill="#f43f5e" />
-                                    <text x="52" y="54" fill="#f43f5e" fontSize="3.2" textAnchor="middle" fontWeight="bold">Outage</text>
-                                  </svg>
-                                ) : (
-                                  <svg className="w-full h-full" viewBox="0 0 100 60">
-                                    <line x1="10" y1="50" x2="90" y2="50" stroke="#27272a" strokeWidth="0.5" />
-                                    {/* Scatter dots */}
-                                    <circle cx="20" cy="38" r="1.2" fill="#71717a" />
-                                    <circle cx="30" cy="33" r="1.2" fill="#71717a" />
-                                    <circle cx="40" cy="36" r="1.2" fill="#71717a" />
-                                    <circle cx="48" cy="15" r="1.5" fill="#f43f5e" />
-                                    <circle cx="55" cy="28" r="1.2" fill="#71717a" />
-                                    <circle cx="70" cy="22" r="1.2" fill="#71717a" />
-                                    <circle cx="80" cy="18" r="1.2" fill="#71717a" />
-                                    {/* regression line */}
-                                    <line x1="15" y1="40" x2="85" y2="15" stroke="#a1a1aa" strokeWidth="0.4" strokeDasharray="1.5" />
-                                    <text x="48" y="10" fill="#f43f5e" fontSize="3" textAnchor="middle" fontWeight="bold">Outlier</text>
-                                  </svg>
-                                )}
-                                <span className="absolute bottom-2 right-2.5 text-[8px] font-mono text-zinc-600 bg-zinc-950/80 px-2 py-0.5 rounded border border-zinc-900 font-bold">ARCA Core Visualizer</span>
+              {activeTab === "visuals" && (() => {
+                const W = 88, H = 42, padL = 12;
+                return (
+                  <div className="space-y-6">
+                    <div className="glass-card p-5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-4">Metric Charts — live data from your upload</span>
+                      {result.report.chart_specs.length === 0 ? (
+                        <p className="text-xs text-zinc-600 text-center py-12">No visual analytics specs generated.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {result.report.chart_specs.map((spec: any, idx: number) => {
+                            let chart: React.ReactNode = <p className="text-[10px] text-zinc-600">No data.</p>;
+
+                            if (spec.type === "histogram" && spec.bins?.length) {
+                              const bins = spec.bins;
+                              const maxC = Math.max(...bins.map((b: any) => b.count), 1);
+                              const bw = W / bins.length;
+                              const minX = bins[0].x, maxX = bins[bins.length-1].x, rX = (maxX-minX)||1;
+                              const meanLine = spec.mean != null ? padL + ((spec.mean - minX) / rX) * W : null;
+                              chart = (
+                                <svg className="w-full h-full" viewBox="0 0 110 60" preserveAspectRatio="none">
+                                  <line x1={padL} y1={H} x2={padL+W} y2={H} stroke="#27272a" strokeWidth="0.4"/>
+                                  <line x1={padL} y1="4" x2={padL} y2={H} stroke="#27272a" strokeWidth="0.4"/>
+                                  {bins.map((b: any, i: number) => { const bh=(b.count/maxC)*(H-6); const x=padL+i*bw+bw*0.08; return <rect key={i} x={x} y={H-bh} width={bw*0.84} height={bh} fill={b.outlier?"#f43f5e":"#6366f1"} rx="0.3" opacity="0.85"/>; })}
+                                  {meanLine!=null && <line x1={meanLine} y1="4" x2={meanLine} y2={H} stroke="#f59e0b" strokeWidth="0.7" strokeDasharray="1.5"/>}
+                                  <text x={padL} y={H+5} fill="#f59e0b" fontSize="2.2">μ={Number(spec.mean).toFixed(1)}</text>
+                                  <text x={padL+W} y={H+5} fill="#71717a" fontSize="2.2" textAnchor="end">n={bins.reduce((s: number, b: any)=>s+b.count, 0)}</text>
+                                </svg>
+                              );
+                            } else if (spec.type === "bar" && spec.bars?.length) {
+                              const bars = spec.bars;
+                              const maxV = Math.max(...bars.map((b: any) => b.value), 0.001);
+                              const bw = W / bars.length;
+                              const meanY = spec.mean != null ? H - (spec.mean/maxV)*(H-6) : null;
+                              chart = (
+                                <svg className="w-full h-full" viewBox="0 0 110 62" preserveAspectRatio="none">
+                                  <line x1={padL} y1={H} x2={padL+W} y2={H} stroke="#27272a" strokeWidth="0.4"/>
+                                  <line x1={padL} y1="4" x2={padL} y2={H} stroke="#27272a" strokeWidth="0.4"/>
+                                  {meanY!=null && <line x1={padL} y1={meanY} x2={padL+W} y2={meanY} stroke="#f59e0b" strokeWidth="0.7" strokeDasharray="1.5"/>}
+                                  {bars.map((b: any, i: number) => { const bh=(b.value/maxV)*(H-6); const x=padL+i*bw+bw*0.1; const lbl=String(b.label).length>7?String(b.label).slice(0,6)+"\u2026":b.label; return (<g key={i}><rect x={x} y={H-bh} width={bw*0.8} height={bh} fill={b.drop?"#f43f5e":"#6366f1"} rx="0.3" opacity="0.85"/><text x={x+bw*0.4} y={H+4.5} fill={b.drop?"#f43f5e":"#71717a"} fontSize="2.5" textAnchor="middle" fontWeight={b.drop?"bold":"normal"}>{lbl}</text><text x={x+bw*0.4} y={H-bh-1} fill="#a1a1aa" fontSize="1.9" textAnchor="middle">{Number(b.value).toFixed(0)}</text></g>); })}
+                                </svg>
+                              );
+                            } else if (spec.type === "scatter" && spec.points?.length) {
+                              const pts = spec.points;
+                              const xs = pts.map((p: any)=>p.x), ys = pts.map((p: any)=>p.y);
+                              const minX=Math.min(...xs),maxX=Math.max(...xs),rX=(maxX-minX)||1;
+                              const minY=Math.min(...ys),maxY=Math.max(...ys),rY=(maxY-minY)||1;
+                              const scx=(v: number)=>padL+((v-minX)/rX)*W;
+                              const scy=(v: number)=>H-((v-minY)/rY)*(H-6);
+                              const n=pts.length,mx2=xs.reduce((s: number,v: number)=>s+v,0)/n,my2=ys.reduce((s: number,v: number)=>s+v,0)/n;
+                              const slope=xs.reduce((s: number,v: number,i: number)=>s+(v-mx2)*(ys[i]-my2),0)/(xs.reduce((s: number,v: number)=>s+(v-mx2)**2,0)||1);
+                              const ic=my2-slope*mx2;
+                              chart = (
+                                <svg className="w-full h-full" viewBox="0 0 110 58" preserveAspectRatio="none">
+                                  <line x1={padL} y1={H} x2={padL+W} y2={H} stroke="#27272a" strokeWidth="0.4"/>
+                                  <line x1={padL} y1="4" x2={padL} y2={H} stroke="#27272a" strokeWidth="0.4"/>
+                                  <line x1={scx(minX)} y1={scy(slope*minX+ic)} x2={scx(maxX)} y2={scy(slope*maxX+ic)} stroke="#52525b" strokeWidth="0.6" strokeDasharray="1.5"/>
+                                  {pts.map((p: any,i: number)=>(<circle key={i} cx={scx(p.x)} cy={scy(p.y)} r={p.outlier?1.6:0.9} fill={p.outlier?"#f43f5e":"#6366f1"} opacity="0.75"/>))}
+                                  <text x={padL} y={H+5} fill="#71717a" fontSize="2.2">{spec.x}</text>
+                                  <text x={padL+W} y={H+5} fill="#a1a1aa" fontSize="2" textAnchor="end">r={spec.corr}</text>
+                                </svg>
+                              );
+                            } else if (spec.type === "line" && spec.points?.length) {
+                              const pts = spec.points;
+                              const vals=pts.map((p: any)=>p.value);
+                              const minV=Math.min(...vals),maxV=Math.max(...vals),rV=(maxV-minV)||1;
+                              const lx=(i: number)=>padL+(i/(pts.length-1||1))*W;
+                              const ly=(v: number)=>H-((v-minV)/rV)*(H-6);
+                              const d=pts.map((p: any,i: number)=>`${i===0?"M":"L"}${lx(i).toFixed(1)} ${ly(p.value).toFixed(1)}`).join(" ");
+                              const li=[0,Math.floor(pts.length/2),pts.length-1].filter((v: number,i: number,a: number[])=>a.indexOf(v)===i);
+                              chart = (
+                                <svg className="w-full h-full" viewBox="0 0 110 58" preserveAspectRatio="none">
+                                  <line x1={padL} y1={H} x2={padL+W} y2={H} stroke="#27272a" strokeWidth="0.4"/>
+                                  <line x1={padL} y1="4" x2={padL} y2={H} stroke="#27272a" strokeWidth="0.4"/>
+                                  {[0.25,0.5,0.75].map((f: number,i: number)=>(<line key={i} x1={padL} y1={ly(minV+rV*f)} x2={padL+W} y2={ly(minV+rV*f)} stroke="#18181b" strokeWidth="0.3" strokeDasharray="1"/>))}
+                                  <path d={d} fill="none" stroke="#e4e4e7" strokeWidth="1.1" strokeLinejoin="round"/>
+                                  {pts.map((p: any,i: number)=>p.drop&&(<g key={i}><circle cx={lx(i)} cy={ly(p.value)} r="1.8" fill="#f43f5e"/><text x={lx(i)} y={ly(p.value)-2.5} fill="#f43f5e" fontSize="2.2" textAnchor="middle">{String.fromCharCode(9660)}</text></g>))}
+                                  {li.map((i: number)=>(<text key={i} x={lx(i)} y={H+5} fill="#71717a" fontSize="2" textAnchor="middle">{pts[i].date.slice(5)}</text>))}
+                                  <text x={padL-1} y={H} fill="#71717a" fontSize="2" textAnchor="end">{minV.toFixed(0)}</text>
+                                  <text x={padL-1} y={ly(maxV)+1} fill="#71717a" fontSize="2" textAnchor="end">{maxV.toFixed(0)}</text>
+                                </svg>
+                              );
+                            }
+
+                            return (
+                              <div key={idx} className="bg-zinc-950/60 border border-zinc-900/80 p-4 rounded-xl flex flex-col gap-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-zinc-300 font-mono">{spec.title}</span>
+                                  <span className="text-[9px] text-zinc-600 font-mono uppercase tracking-wider">{spec.type}</span>
+                                </div>
+                                <div className="w-full h-52 bg-zinc-950/40 border border-zinc-900/60 rounded-lg relative overflow-hidden flex items-center justify-center">
+                                  {chart}
+                                  <span className="absolute bottom-1.5 right-2 text-[7px] font-mono text-zinc-700 bg-zinc-950/80 px-1.5 py-0.5 rounded border border-zinc-900">ARCA Core Visualizer</span>
+                                </div>
+                                <div className="flex flex-wrap gap-3 text-[9px] font-mono">
+                                  <span className="flex items-center gap-1 text-indigo-400"><span className="w-2 h-2 rounded-sm bg-indigo-500 inline-block"/>Normal</span>
+                                  <span className="flex items-center gap-1 text-rose-400"><span className="w-2 h-2 rounded-sm bg-rose-500 inline-block"/>Anomaly/Drop</span>
+                                  {(spec.type==="histogram"||spec.type==="bar")&&spec.mean!=null&&<span className="flex items-center gap-1 text-amber-400"><span className="w-3 h-px bg-amber-500 inline-block"/>Mean={Number(spec.mean).toFixed(1)}</span>}
+                                  {spec.type==="scatter"&&spec.corr!=null&&<span className="text-zinc-500">r={spec.corr} · {spec.points?.length} pts</span>}
+                                  {spec.type==="line"&&spec.points?.length&&<span className="text-zinc-500">{spec.points.length} pts · {spec.points.filter((p: any)=>p.drop).length} drops marked</span>}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* TAB 3: INCIDENT ROOM CHAT */}
               {activeTab === "chat" && (
