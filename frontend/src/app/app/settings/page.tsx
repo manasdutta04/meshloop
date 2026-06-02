@@ -250,8 +250,8 @@ export default function SettingsPage() {
         <div className="max-w-5xl mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between h-12">
             <Link href="/" className="flex items-center gap-3">
-              <img src="/logo.png" alt="Meshloop Logo" className="h-6 w-6 object-contain" />
-              <span className="text-xs font-semibold tracking-[0.18em] text-white uppercase">Meshloop</span>
+              <img src="/logo.png" alt="Meshloop Logo" className="h-8 w-8 object-contain" />
+              <span className="font-serif-ui text-xl tracking-[-0.01em] text-white">Meshloop</span>
             </Link>
             <div className="flex items-center gap-2">
               <Link
