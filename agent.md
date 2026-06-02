@@ -36,8 +36,8 @@ meshloop/
 │   ├── src/
 │   │   └── app/
 │   │       ├── globals.css  ← Global premium styling & variables [globals.css](file:///c:/Coding%20Workspace/OSS-CONTRIBS/meshloop/frontend/src/app/globals.css)
-│   │       ├── layout.js    ← App layout & metadata configuration [layout.js](file:///c:/Coding%20Workspace/OSS-CONTRIBS/meshloop/frontend/src/app/layout.js)
-│   │       └── page.js      ← Premium single-page interactive dashboard [page.js](file:///c:/Coding%20Workspace/OSS-CONTRIBS/meshloop/frontend/src/app/page.js)
+│   │       ├── layout.tsx   ← App layout & metadata configuration [layout.tsx](file:///c:/Coding%20Workspace/OSS-CONTRIBS/meshloop/frontend/src/app/layout.tsx)
+│   │       └── page.tsx     ← Premium single-page interactive dashboard [page.tsx](file:///c:/Coding%20Workspace/OSS-CONTRIBS/meshloop/frontend/src/app/page.tsx)
 │   ├── package.json
 │   └── README.md
 ├── sample_data/          ← Test datasets (messy sales CSV + server reports PDF)
@@ -58,7 +58,7 @@ meshloop/
 *   **Error Handling**: Wrap external library calls (e.g. `fitz` for PDF parsing, `json.load`, `pd.read_excel`) in robust try-except blocks and fall back gracefully.
 
 #### Frontend (Next.js React & CSS)
-*   **Client Directives**: Add `"use client";` at the top of client-side files like [page.js](file:///c:/Coding%20Workspace/OSS-CONTRIBS/meshloop/frontend/src/app/page.js) to manage component-level states, user interactions, and fetch operations.
+*   **Client Directives**: Add `"use client";` at the top of client-side files like [page.tsx](file:///c:/Coding%20Workspace/OSS-CONTRIBS/meshloop/frontend/src/app/page.tsx) to manage component-level states, user interactions, and fetch operations.
 *   **API Requests**: Use the native `fetch()` browser API or equivalent methods targeting `http://localhost:8000` to interact with backend endpoints (`/api/analyze`, `/api/chat`, etc.).
 *   **Visual Styling**: Write Vanilla CSS declarations inside [globals.css](file:///c:/Coding%20Workspace/OSS-CONTRIBS/meshloop/frontend/src/app/globals.css) to build a cohesive design system using dark mode styles, custom typography (Plus Jakarta Sans/Inter), card layout grids, glowing gradients, hover scaling micro-animations, and custom scrolling behaviors. Avoid Tailwind unless explicitly requested.
 
@@ -103,7 +103,7 @@ graph TD
 
 ### Day 5: Next.js Frontend Dashboard Features (Priya - Frontend)
 *   **P5.1 — Globals & Dark Theme CSS**: Establish custom dark styles in `globals.css` with glowing cards.
-*   **P5.2 — Upload Page & Progress Ingesting**: Implement drag-and-drop zip file uploader in `page.js` targeting the backend upload endpoint with reactive progress metrics.
+*   **P5.2 — Upload Page & Progress Ingesting**: Implement drag-and-drop zip file uploader in `page.tsx` targeting the backend upload endpoint with reactive progress metrics.
 *   **P5.3 — Discovery Insights Tab**: Loop and render critical, high, and medium severity anomaly cards with data evidence.
 *   **P5.4 — Visual Analytics Tab**: Render data analytics graphs using premium CSS/SVG custom shapes matching the color themes.
 
