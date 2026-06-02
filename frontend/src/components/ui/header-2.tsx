@@ -50,7 +50,7 @@ export function Header() {
 			>
 				<Link href="/" className="flex items-center gap-3">
 					<img src="/logo.png" alt="Meshloop Logo" className="h-8 w-8 object-contain" />
-					<span className="text-sm font-semibold tracking-[0.22em] text-white uppercase">Meshloop</span>
+						<span className="font-serif-ui text-base tracking-[-0.01em] text-white">Meshloop</span>
 				</Link>
 
 				<div className="hidden items-center gap-2 md:flex">
