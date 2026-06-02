@@ -461,7 +461,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-3">
                 <img src="/logo.png" alt="Meshloop Logo" className="h-10 w-10 object-contain" />
                 <div>
-                  <div className="text-sm font-semibold tracking-[0.22em] text-white uppercase">Meshloop</div>
+                  <div className="text-sm font-semibold tracking-[0.22em] text-white">Meshloop</div>
                   <div className="text-[10px] tracking-[0.28em] text-zinc-500 uppercase">Incident intelligence for modern teams</div>
                 </div>
               </div>
@@ -498,7 +498,7 @@ export default function LandingPage() {
                 <Link href="/terms" className="transition-colors hover:text-white">Terms</Link>
                 <Link href="/docs" className="transition-colors hover:text-white">Architecture</Link>
                 <Link href="/app" className="transition-colors hover:text-white">Launch App</Link>
-                <span>Support: ops@meshloop.local</span>
+                <span>Support: meshloop@example.com</span>
               </div>
             </div>
           </div>
