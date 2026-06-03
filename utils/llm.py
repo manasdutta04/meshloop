@@ -143,7 +143,9 @@ def call_llm(prompt: str, fast: bool = False, temperature: float = 0.2) -> str:
                 print(f"[LLM Cache] Hit for {model}")
                 return _cache[cache_key]
 
-    if not GITHUB_TOKEN:
+    cfg = _current_ai_config()
+    active_key = cfg.get("api_key") or GITHUB_TOKEN or None
+    if not active_key:
         if demo:
             result = _local_text_response(prompt, fast=fast)
             if CACHE_TEXT_RESPONSES:
@@ -300,12 +302,16 @@ def get_embedding(text: str) -> list[float]:
                 print(f"[LLM Cache] Found invalid embedding: {err}. Recomputing fallback with correct dim={EMBEDDING_DIM}.")
 
     try:
-        if not USE_REMOTE_EMBEDDINGS or not _provider_has_embeddings():
+        cfg = _current_ai_config()
+        active_key = cfg.get("api_key") or GITHUB_TOKEN or None
+        use_remote_embeddings = bool(active_key) and os.getenv("USE_REMOTE_EMBEDDINGS", "true").lower() != "false"
+
+        if not use_remote_embeddings or not _provider_has_embeddings():
             if not demo and not _provider_has_embeddings():
                 # Provider (e.g. Groq) has no embedding API — use pseudo-embeddings silently
                 global _warned_embedding_fallback
                 if not _warned_embedding_fallback:
-                    cfg_url = _current_ai_config().get("base_url", "")
+                    cfg_url = cfg.get("base_url", "")
                     print(f"[Embeddings] Provider at '{cfg_url}' does not support embeddings. Using local pseudo-embeddings.")
                     _warned_embedding_fallback = True
                 vec = _pseudo_embedding(text)
@@ -314,7 +320,7 @@ def get_embedding(text: str) -> list[float]:
                     _save_cache()
                 return vec
             if not demo:
-                raise RuntimeError("No GitHub token configured for embeddings.")
+                raise RuntimeError("No API key or GitHub token configured for embeddings.")
             vec = _pseudo_embedding(text)
             with _lock:
                 _cache[cache_key] = vec
