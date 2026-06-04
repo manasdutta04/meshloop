@@ -31,6 +31,14 @@ def run_pipeline(file_path: str, progress_callback=None, demo_mode_enabled: bool
         print("[4/5] Discovering patterns...")
         discovery = discover_patterns(cleaning, ingestion, session_id)
         
+        from agents.discovery import run_agent_debate
+        debate_result = run_agent_debate(
+            discovery["top_insight"], 
+            discovery["insights"], 
+            ingestion
+        )
+        discovery["agent_debate"] = debate_result
+        
         # Store insights in the vector store so the chat agent can reference them
         store_insights(discovery["insights"], session_id)
 

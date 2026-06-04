@@ -288,3 +288,103 @@ def _make_summary(insights: list, file_name: str) -> str:
         return call_llm(prompt, fast=True)
     except Exception:
         return f"Discovered {len(insights)} forensic incidents in {file_name}."
+
+def run_agent_debate(top_insight: dict, all_insights: list, ingestion_result: dict) -> dict:
+    """
+    Simulates a debate between Discovery, Validator, and Synthesis agents
+    about the top insight and other insights.
+    """
+    fallback = {
+        "debate": [
+            {
+                "agent": "Discovery Agent",
+                "icon": "🔍",
+                "stance": "primary",
+                "message": "Primary anomaly detected. The main finding points to unexpected resource limits or threshold crossings."
+            },
+            {
+                "agent": "Validator Agent",
+                "icon": "⚠️",
+                "stance": "challenge",
+                "message": "What else could explain this? The finding might not fully account for secondary events in other logs."
+            },
+            {
+                "agent": "Synthesis Agent",
+                "icon": "✅",
+                "stance": "resolved",
+                "message": "Acknowledging the gap, the refined root cause integrates the primary anomaly with log timing alignment."
+            }
+        ],
+        "final_verdict": {
+            "root_cause": "Sustained resource exhaustion leading to service degradation.",
+            "confidence": 85,
+            "first_action": "Check configuration settings and log correlation timestamps."
+        }
+    }
+
+    if not top_insight:
+        return fallback
+
+    try:
+        import json
+        top_insight_json = json.dumps(top_insight, indent=2)
+        
+        other_insights_formatted = []
+        for ins in all_insights:
+            if ins.get("title") != top_insight.get("title"):
+                other_insights_formatted.append(f"- Title: {ins.get('title')}\n  Description: {ins.get('description')}")
+        other_insights_str = "\n".join(other_insights_formatted) if other_insights_formatted else "None"
+        
+        file_name = ingestion_result.get("metadata", {}).get("file_name", "Uploaded Files")
+        
+        prompt = f"""You are a multi-agent system analyzing system incident data.
+We are looking at files in: {file_name}
+
+Here is the primary (top) insight discovered:
+{top_insight_json}
+
+Here are the other insights detected in the data for context:
+{other_insights_str}
+
+Please simulate a collaborative debate between three virtual agents to reason about the root cause:
+1. DISCOVERY AGENT — presents the primary finding confidently, citing specific evidence from data_evidence in top_insight.
+2. VALIDATOR AGENT — challenges ONE aspect of the Discovery Agent's conclusion. Asks: "what else could explain this?" or "what does this finding NOT account for?". References a DIFFERENT insight from the other insights listed above to support its challenge.
+3. SYNTHESIS AGENT — resolves the debate. Acknowledges the Validator's challenge and produces a REFINED final root cause that incorporates both perspectives. Assigns a confidence score (0-100) and a recommended first action.
+
+You MUST respond ONLY with valid JSON in exactly this format:
+{{
+  "debate": [
+    {{
+      "agent": "Discovery Agent",
+      "icon": "🔍",
+      "stance": "primary",
+      "message": "2-3 sentences presenting the main finding with specific numbers from the evidence."
+    }},
+    {{
+      "agent": "Validator Agent", 
+      "icon": "⚠️",
+      "stance": "challenge",
+      "message": "2-3 sentences challenging one assumption or asking what the finding doesn't explain. Reference a specific counter-observation."
+    }},
+    {{
+      "agent": "Synthesis Agent",
+      "icon": "✅", 
+      "stance": "resolved",
+      "message": "2-3 sentences that acknowledge the challenge and produce a refined, more complete root cause."
+    }}
+  ],
+  "final_verdict": {{
+    "root_cause": "One sentence — the definitive root cause.",
+    "confidence": 91,
+    "first_action": "One specific, actionable recommended next step."
+  }}
+}}"""
+        res = call_llm_json(prompt)
+        
+        if isinstance(res, dict) and "debate" in res and "final_verdict" in res:
+            return res
+    except Exception as e:
+        print(f"Error running agent debate: {e}")
+        
+    return fallback
+

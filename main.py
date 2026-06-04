@@ -116,7 +116,8 @@ async def analyze_files(request: Request, files: List[UploadFile] = File(...)):
                 "insights": result["discovery"].get("insights", []),
                 "top_insight": result["discovery"].get("top_insight", {}),
                 "summary": result["discovery"].get("summary", ""),
-                "total_found": result["discovery"].get("total_found", 0)
+                "total_found": result["discovery"].get("total_found", 0),
+                "agent_debate": result["discovery"].get("agent_debate", {})
             },
             "report": {
                 "report_text": result["report"].get("report_text", ""),
@@ -158,7 +159,8 @@ async def analyze_sample(request: Request):
                 "insights": result["discovery"].get("insights", []),
                 "top_insight": result["discovery"].get("top_insight", {}),
                 "summary": result["discovery"].get("summary", ""),
-                "total_found": result["discovery"].get("total_found", 0)
+                "total_found": result["discovery"].get("total_found", 0),
+                "agent_debate": result["discovery"].get("agent_debate", {})
             },
             "report": {
                 "report_text": result["report"].get("report_text", ""),
