@@ -8,6 +8,7 @@ interface AgentReason {
   icon: string;
   stance: "primary" | "challenge" | "resolved";
   message: string;
+  cited_files?: string[];
 }
 
 interface FinalVerdict {
@@ -40,6 +41,10 @@ const verdictColorClass = (confidence: number) => {
 export function AgentDebate({ debate }: AgentDebateProps) {
   const [open, setOpen] = useState(false);
   const [animatedConfidence, setAnimatedConfidence] = useState(0);
+
+  useEffect(() => {
+    console.log(debate);
+  }, [debate]);
 
   useEffect(() => {
     if (!open) {
@@ -83,12 +88,12 @@ export function AgentDebate({ debate }: AgentDebateProps) {
 
       <div className={`overflow-hidden ${open ? "mt-6" : "mt-0"}`}>
         <div className={`grid gap-4 ${open ? "" : "pointer-events-none h-0 opacity-0"}`}>
-          {debate.debate.map((item, index) => {
-            const stance = stanceMap[item.stance];
+          {debate.debate.map((entry, index) => {
+            const stance = stanceMap[entry.stance];
             const CardIcon = stance.icon;
             return (
               <article
-                key={`${item.agent}-${index}`}
+                key={`${entry.agent}-${index}`}
                 style={{ transitionDelay: `${open ? index * 150 : 0}ms` }}
                 className={`rounded-3xl border border-white/10 border-l-4 ${stance.border} bg-zinc-900/60 p-4 transition-all duration-500 ${
                   open ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
@@ -99,11 +104,32 @@ export function AgentDebate({ debate }: AgentDebateProps) {
                     <CardIcon className="h-4 w-4 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">{item.agent}</p>
-                    <p className="text-sm font-semibold text-white">{item.stance}</p>
+                    <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">{entry.agent}</p>
+                    <p className="text-sm font-semibold text-white">{entry.stance}</p>
                   </div>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-zinc-300">{item.message}</p>
+                <p className="mt-3 text-sm leading-6 text-zinc-300">{entry.message}</p>
+                {entry.cited_files && entry.cited_files.length > 0 && (
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
+                    {entry.cited_files.map((file) => (
+                      <span
+                        key={file}
+                        style={{
+                          fontSize: '0.7rem',
+                          fontFamily: 'monospace',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          backgroundColor: 'rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          color: 'rgba(255,255,255,0.55)',
+                          letterSpacing: '0.02em',
+                        }}
+                      >
+                        [{file}]
+                      </span>
+                    ))}
+                  </div>
+                )}
               </article>
             );
           })}

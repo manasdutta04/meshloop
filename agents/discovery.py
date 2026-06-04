@@ -300,19 +300,22 @@ def run_agent_debate(top_insight: dict, all_insights: list, ingestion_result: di
                 "agent": "Discovery Agent",
                 "icon": "🔍",
                 "stance": "primary",
-                "message": "Primary anomaly detected. The main finding points to unexpected resource limits or threshold crossings."
+                "message": "Primary anomaly detected. The main finding points to unexpected resource limits or threshold crossings.",
+                "cited_files": []
             },
             {
                 "agent": "Validator Agent",
                 "icon": "⚠️",
                 "stance": "challenge",
-                "message": "What else could explain this? The finding might not fully account for secondary events in other logs."
+                "message": "What else could explain this? The finding might not fully account for secondary events in other logs.",
+                "cited_files": []
             },
             {
                 "agent": "Synthesis Agent",
                 "icon": "✅",
                 "stance": "resolved",
-                "message": "Acknowledging the gap, the refined root cause integrates the primary anomaly with log timing alignment."
+                "message": "Acknowledging the gap, the refined root cause integrates the primary anomaly with log timing alignment.",
+                "cited_files": []
             }
         ],
         "final_verdict": {
@@ -327,6 +330,7 @@ def run_agent_debate(top_insight: dict, all_insights: list, ingestion_result: di
 
     try:
         import json
+        import os
         top_insight_json = json.dumps(top_insight, indent=2)
         
         other_insights_formatted = []
@@ -337,8 +341,15 @@ def run_agent_debate(top_insight: dict, all_insights: list, ingestion_result: di
         
         file_name = ingestion_result.get("metadata", {}).get("file_name", "Uploaded Files")
         
+        metadata = ingestion_result.get("metadata", {}) if isinstance(ingestion_result, dict) else {}
+        if not metadata:
+            metadata = {}
+        file_list = metadata.get("files_contained", [metadata.get("file_name", "unknown")])
+        files_in_session_str = f"Files in this session: {', '.join(file_list)}"
+        
         prompt = f"""You are a multi-agent system analyzing system incident data.
 We are looking at files in: {file_name}
+{files_in_session_str}
 
 Here is the primary (top) insight discovered:
 {top_insight_json}
@@ -349,28 +360,38 @@ Here are the other insights detected in the data for context:
 Please simulate a collaborative debate between three virtual agents to reason about the root cause:
 1. DISCOVERY AGENT — presents the primary finding confidently, citing specific evidence from data_evidence in top_insight.
 2. VALIDATOR AGENT — challenges ONE aspect of the Discovery Agent's conclusion. Asks: "what else could explain this?" or "what does this finding NOT account for?". References a DIFFERENT insight from the other insights listed above to support its challenge.
+   The Validator Agent MUST follow these rules:
+   1. Identify which file the Discovery Agent cited (e.g. metrics.csv).
+   2. The Validator MUST reference a DIFFERENT file by its exact filename in its message. For example, if Discovery cited metrics.csv, Validator must reference deployment_log.txt or db_error_logs.txt or support_tickets.txt — whichever contains a contradicting or unexplained data point.
+   3. The Validator message must include a specific timing gap, number, or observation from that different file that the Discovery Agent's conclusion does not account for. For example: "deployment_log.txt shows the config change at 20:09 UTC — 6 hours before the incident window. If pool exhaustion were the sole cause, why did it take 6 hours to trigger?" 
+   4. The Validator message must end with a direct question that the Synthesis Agent will answer.
 3. SYNTHESIS AGENT — resolves the debate. Acknowledges the Validator's challenge and produces a REFINED final root cause that incorporates both perspectives. Assigns a confidence score (0-100) and a recommended first action.
 
-You MUST respond ONLY with valid JSON in exactly this format:
+You MUST respond ONLY with valid JSON in exactly this format. For each agent, populate "cited_files" with a list of the exact filenames referenced in its message. If no files are referenced, use an empty list [].
+
+Format:
 {{
   "debate": [
     {{
       "agent": "Discovery Agent",
       "icon": "🔍",
       "stance": "primary",
-      "message": "2-3 sentences presenting the main finding with specific numbers from the evidence."
+      "message": "2-3 sentences presenting the main finding with specific numbers from the evidence.",
+      "cited_files": ["metrics.csv"]
     }},
     {{
       "agent": "Validator Agent", 
       "icon": "⚠️",
       "stance": "challenge",
-      "message": "2-3 sentences challenging one assumption or asking what the finding doesn't explain. Reference a specific counter-observation."
+      "message": "2-3 sentences challenging one assumption or asking what the finding doesn't explain. Reference a specific counter-observation.",
+      "cited_files": ["deployment_log.txt", "db_error_logs.txt"]
     }},
     {{
       "agent": "Synthesis Agent",
       "icon": "✅", 
       "stance": "resolved",
-      "message": "2-3 sentences that acknowledge the challenge and produce a refined, more complete root cause."
+      "message": "2-3 sentences that acknowledge the challenge and produce a refined, more complete root cause.",
+      "cited_files": ["metrics.csv", "deployment_log.txt", "db_error_logs.txt"]
     }}
   ],
   "final_verdict": {{
@@ -379,9 +400,21 @@ You MUST respond ONLY with valid JSON in exactly this format:
     "first_action": "One specific, actionable recommended next step."
   }}
 }}"""
+        if os.getenv("DEBUG"):
+            print("--- DEBATE PROMPT START ---")
+            try:
+                print(prompt)
+            except UnicodeEncodeError:
+                print(prompt.encode('ascii', errors='replace').decode('ascii'))
+            print("--- DEBATE PROMPT END ---")
+
         res = call_llm_json(prompt)
         
         if isinstance(res, dict) and "debate" in res and "final_verdict" in res:
+            # Ensure cited_files is present on all debate entries
+            for entry in res["debate"]:
+                if "cited_files" not in entry:
+                    entry["cited_files"] = []
             return res
     except Exception as e:
         print(f"Error running agent debate: {e}")
