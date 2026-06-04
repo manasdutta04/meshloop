@@ -32,6 +32,7 @@ import {
   DownloadCloud
 } from "lucide-react";
 import Link from "next/link";
+import { AgentDebate } from "../../components/AgentDebate";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
 
@@ -627,6 +628,10 @@ export default function AppHome() {
                       {result.discovery.top_insight.description}
                     </p>
                   </div>
+                )}
+
+                {result.discovery.agent_debate?.debate?.length > 0 && (
+                  <AgentDebate debate={result.discovery.agent_debate} />
                 )}
 
                 {/* Incident cards list */}
