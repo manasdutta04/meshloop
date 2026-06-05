@@ -70,10 +70,10 @@ export default function PrivacyPage() {
             </div>
             <div className="px-5 py-3 space-y-0">
               <DataRow label="Uploaded files" value="Sent only to your local FastAPI backend. Never to Meshloop servers." highlight />
-              <DataRow label="API keys" value="Transmitted as request headers. Never stored anywhere by Meshloop." highlight />
+              <DataRow label="API keys" value="Transmitted as request headers. Saved locally in your browser's localStorage." highlight />
               <DataRow label="Analysis results" value="Stored in-memory only. Cleared on backend restart." highlight />
-              <DataRow label="LLM prompt data" value="Sent to your chosen provider (OpenAI, Groq, etc.) per your configuration." />
-              <DataRow label="Browser data" value="No cookies. No localStorage. No analytics trackers." highlight />
+              <DataRow label="LLM prompt data" value="Sent to your configured provider (GitHub, OpenAI, Groq, etc.) or processed locally via Ollama." />
+              <DataRow label="Browser data" value="No cookies. Settings and keys cached in local browser storage." highlight />
               <DataRow label="IP addresses" value="Not logged by Meshloop. Your local backend may log localhost requests." />
               <DataRow label="Account data" value="No accounts, no registration, no personal profiles." highlight />
             </div>
@@ -104,34 +104,35 @@ export default function PrivacyPage() {
             <Clause num="3" title="LLM API Calls — What's Sent to Third Parties" icon={Globe}>
               <p>To generate root-cause explanations, answer chat queries, and create analysis summaries, Meshloop sends prompts to your configured LLM provider. The content of these prompts includes:</p>
               <ul className="list-disc list-inside pl-2 space-y-1">
-                <li><strong className="text-zinc-300">Statistical summaries</strong> — e.g., "Sales dropped 42% on 2024-01-10 in South (actual: 337.29, expected: 581.58)"</li>
+                <li><strong className="text-zinc-300">Statistical summaries</strong> — e.g., "Write latency spiked 410% on 2026-06-04 in East region (actual: 8400.0, expected: 220.0)"</li>
                 <li><strong className="text-zinc-300">Extracted text snippets</strong> from log files relevant to the anomaly date/region (retrieved from ChromaDB)</li>
                 <li><strong className="text-zinc-300">System instructions</strong> — fixed prompt templates describing the analyst role</li>
               </ul>
               <p>Raw uploaded file contents are <strong className="text-zinc-300">not</strong> sent to the LLM in bulk — only targeted excerpts retrieved by semantic similarity. You can inspect the exact prompt construction in <code className="text-zinc-300">agents/discovery.py</code> and <code className="text-zinc-300">agents/chat.py</code>.</p>
-              <p>Data sent to your LLM provider is governed by that provider's own privacy policy and data processing terms. We recommend reviewing:</p>
+              <p><strong className="text-zinc-300">Local Inference Option (Ollama):</strong> If you configure a local offline model (such as Ollama on <code className="text-zinc-300">http://localhost:11434</code>), all model inference, embeddings, and chat Q&A are executed completely on your local machine. In this scenario, absolutely no telemetry, prompt data, or log snippets are sent to any external server or third-party API.</p>
+              <p>For cloud providers, data sent to your LLM provider is governed by that provider's own privacy policy and data processing terms. We recommend reviewing:</p>
               <ul className="list-disc list-inside pl-2 space-y-1">
+                <li>GitHub Models: <span className="text-indigo-400">docs.github.com/en/site-policy</span></li>
                 <li>OpenAI: <span className="text-indigo-400">platform.openai.com/privacy</span></li>
                 <li>Groq: <span className="text-indigo-400">groq.com/privacy</span></li>
-                <li>GitHub Models: <span className="text-indigo-400">docs.github.com/en/site-policy</span></li>
               </ul>
             </Clause>
 
             <Clause num="4" title="API Keys & Credentials" icon={Key}>
-              <p>Your LLM API key is entered in the in-app Settings panel and is transmitted with each analysis request as an HTTP header (<code className="text-zinc-300">X-AI-API-Key</code>) from your browser to your local backend.</p>
-              <p><strong className="text-zinc-300">The key is never persisted anywhere by Meshloop</strong> — not in localStorage, not in a cookie, not in any server-side database. It exists only in your browser's React component state for the duration of the session tab. Closing or refreshing the browser tab clears it.</p>
-              <p>You are responsible for protecting your API key from unauthorized access in your local environment.</p>
+              <p>Your LLM API key and configuration settings are entered in the settings panel and are transmitted with each analysis request as an HTTP header (<code className="text-zinc-300">x-meshloop-api-key</code>) from your browser to your local FastAPI backend.</p>
+              <p><strong className="text-zinc-300">Browser local storage:</strong> To prevent you from having to re-enter your credentials and model preferences on every page reload, these settings (including the API key) are saved locally in your browser's <code className="text-zinc-300">localStorage</code> under the key <code className="text-zinc-300">meshloop-ai-config</code>. They are never transmitted to Meshloop-operated databases or central servers.</p>
+              <p>You can clear these saved credentials at any time by clicking the <strong className="text-zinc-300">Reset Settings</strong> or <strong className="text-zinc-300">New Session</strong> buttons, which will remove the entry from your browser's storage.</p>
             </Clause>
 
             <Clause num="5" title="Embeddings & Vector Storage" icon={Server}>
-              <p>When data is indexed into ChromaDB, each chunk is converted to a vector embedding. If you are using a provider with embedding support (e.g., OpenAI with <code className="text-zinc-300">text-embedding-3-small</code>), the text chunk is sent to that provider's Embeddings API.</p>
+              <p>When data is indexed into ChromaDB, each chunk is converted to a vector embedding. If you are using a provider with embedding support (e.g., OpenAI with <code className="text-zinc-300">text-embedding-3-small</code> or local Ollama embeddings), the text chunk is sent to that provider's Embeddings API.</p>
               <p>If you are using <strong className="text-zinc-300">Groq</strong> — which does not offer an Embeddings API — Meshloop automatically falls back to pseudo-embeddings: deterministic, hash-based vectors generated locally with no external API call. This means no embedding data is transmitted to any third party when using Groq.</p>
               <p>ChromaDB stores vectors in memory only by default. No vector data is transmitted to Meshloop or any analytics service.</p>
             </Clause>
 
             <Clause num="6" title="Cookies, Analytics & Tracking" icon={Eye}>
-              <p>Meshloop ARCA uses <strong className="text-zinc-300">no cookies</strong>, <strong className="text-zinc-300">no localStorage</strong>, <strong className="text-zinc-300">no sessionStorage</strong>, and <strong className="text-zinc-300">no third-party analytics</strong> (no Google Analytics, no Mixpanel, no Sentry, no Datadog).</p>
-              <p>The frontend is a stateless Next.js application. The only state it maintains is in React component memory during your browser session. No behavioral data, page views, or usage patterns are collected or transmitted anywhere.</p>
+              <p>Meshloop ARCA uses <strong className="text-zinc-300">no cookies</strong> and <strong className="text-zinc-300">no third-party tracking or behavioral analytics</strong> (no Google Analytics, no Mixpanel, no Sentry, no Datadog).</p>
+              <p>The application uses your browser's <code className="text-zinc-300">localStorage</code> solely to save your local server base URL and API keys for persistence across tab reloads (stored under <code className="text-zinc-300">meshloop-ai-config</code>). No behavioral data, page views, or telemetry is captured or transmitted anywhere by Meshloop.</p>
             </Clause>
 
             <Clause num="7" title="Data Retention & Deletion" icon={Trash2}>

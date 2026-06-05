@@ -67,9 +67,9 @@ export default function TermsPage() {
             </Clause>
 
             <Clause num="3" title="Use of Third-Party AI APIs">
-              <p>Meshloop ARCA is a Bring-Your-Own-Key (BYOK) platform. To enable LLM-powered analysis (root-cause explanations, semantic chat), you must supply your own API credentials from a supported provider such as OpenAI, Groq, GitHub Models, or any OpenAI-compatible local server.</p>
-              <p>Your API key is transmitted directly from your browser to your local FastAPI backend as an HTTP header per request. <strong className="text-zinc-300">It is never stored by Meshloop</strong> — on disk, in a database, or on any third-party server operated by Meshloop.</p>
-              <p>By providing an API key, you agree to comply with the terms of service of the respective provider. You are solely responsible for any costs incurred through your API usage, including token consumption during analysis and chat sessions.</p>
+              <p>Meshloop ARCA is a Bring-Your-Own-Key (BYOK) platform. To enable LLM-powered analysis (root-cause explanations, semantic chat), you must supply your own API credentials from a supported provider such as OpenAI, Groq, GitHub Models, or a local server running Ollama.</p>
+              <p>Your credentials and endpoint settings are stored locally in your browser's <code className="text-zinc-300">localStorage</code> under the key <code className="text-zinc-300">meshloop-ai-config</code> for persistence across page loads, and are sent to your local FastAPI backend as request headers (<code className="text-zinc-300">x-meshloop-api-key</code>, etc.). <strong className="text-zinc-300">They are never stored or collected by Meshloop</strong> on any remote database or central server.</p>
+              <p>By using a third-party API provider, you agree to comply with their respective terms of service. You are solely responsible for any API costs or token consumption rates incurred during your usage of Meshloop ARCA. If using a local model endpoint (like Ollama), no API keys are required and no data leaves your local network.</p>
             </Clause>
 
             <Clause num="4" title="Data You Upload">

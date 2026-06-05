@@ -81,17 +81,18 @@ export default function DocsPage() {
         {/* How it works */}
         <Section icon={GitBranch} label="Pipeline Overview">
           <div className="bg-zinc-950/60 border border-zinc-900/80 rounded-xl p-5 text-[11px] text-zinc-400 leading-relaxed space-y-2">
-            <p>When you upload a file or ZIP archive, Meshloop runs a five-stage ARCA pipeline sequentially:</p>
+            <p>When files are uploaded or a sample run is triggered, Meshloop runs a six-stage ARCA pipeline sequentially:</p>
             <ol className="list-decimal list-inside space-y-1.5 pl-2 mt-2">
               {[
-                "Ingestion — parse structured (CSV, Excel, JSON) and unstructured (TXT, PDF logs) files",
-                "Cleaning — fix nulls, normalize casing, standardize timestamps, balance metrics",
-                "Vector Storage — chunk and embed rows into ChromaDB with date+region metadata tags",
-                "Discovery — detect statistical anomalies, query vector store for correlated logs, generate root-cause explanations via LLM",
-                "Reporting — compile Markdown audit report and embed real chart data for the Visuals tab",
+                "Ingestion — parses mixed-modal files (CSV, Excel, JSON metrics) and unstructured text logs (TXT, PDF) from ZIP archives or individual uploads",
+                "Cleaning & Typing — normalizes schemas, standardizes timestamps, removes duplicate rows, and balance category counts (oversampling imbalanced groups)",
+                "Anomaly Isolation — runs IQR checks for metrics outliers and isolates regional/chronological drops exceeding 30% of the rolling median",
+                "Vector Storage — chunks unstructured developer logs and indexes them into an in-memory ChromaDB store with regional and chronological metadata tags",
+                "Multi-Agent SRE Debate — Discovery and Validator agents debate statistical findings against log evidence, resolved by the Synthesis agent into a final verdict",
+                "Reporting & Visualization — compiles a Markdown forensic report and generates custom JSON chart specifications for rendering SVG graphics",
               ].map((s, i) => <li key={i}>{s}</li>)}
             </ol>
-            <p className="mt-2 text-zinc-500">All stages run within a single <code className="text-zinc-300">run_pipeline()</code> call in <code className="text-zinc-300">pipeline.py</code>. Session data lives in-memory and is cleared on server restart.</p>
+            <p className="mt-2 text-zinc-500">All stages run within a single execution flow coordinated by <code className="text-zinc-300">pipeline.py</code>. Session data is cached in-memory in the FastAPI backend process.</p>
           </div>
         </Section>
 
@@ -99,19 +100,22 @@ export default function DocsPage() {
         <Section icon={Cpu} label="Core Agent Modules">
           <div className="space-y-3">
             <Card title="1. Ingestion Agent" badge="agents/ingestion.py" badgeColor="bg-zinc-900 border-zinc-800 text-zinc-400">
-              Extracts and parses files from uploaded ZIPs or single uploads. Structured tabular files (CSV, XLSX, JSON) are loaded into Pandas DataFrames keyed by filename. Unstructured logs (TXT, PDF) are extracted as raw text and stored separately for vector indexing. Metadata including <code>file_name</code>, <code>files_contained</code>, <code>file_type</code>, and column names is compiled into the ingestion result dict.
+              Extracts zipped files or handles single files. Tabular files (CSVs, Excel, JSON) are parsed into Pandas DataFrames, and unstructured text files (logs, readmes, PDFs via pdfminer) are processed into clean text strings for vector indexing. Metadata is compiled into a structured registry.
             </Card>
             <Card title="2. Data Cleaning Agent" badge="agents/cleaning.py" badgeColor="bg-zinc-900 border-zinc-800 text-zinc-400">
-              Applies a battery of deterministic cleaning rules per DataFrame: null-value imputation (numeric columns filled with median, categorical columns filled with mode), timestamp format normalization, duplicate row removal, currency string parsing, and case standardization for categorical columns like Product names. Each fix is logged as a human-readable string in <code>issues_found</code>.
+              Applies cleaning rules: imputes numeric nulls with column medians, resolves categorical nulls with modes, fixes date formats, removes duplicate rows, and balances categorical features (oversampling categories with under 70% share) for downstream machine learning.
             </Card>
             <Card title="3. Vector Store Agent" badge="utils/vector_store.py" badgeColor="bg-zinc-900 border-zinc-800 text-zinc-400">
-              Chunks both tabular rows and log text into segments and indexes them into an in-memory ChromaDB collection. Each chunk is annotated with metadata tags (<code>date</code>, <code>region</code>, <code>source_file</code>, <code>session_id</code>) to enable precise filtered semantic retrieval during the discovery stage. Embeddings are generated via your configured LLM provider, or via pseudo-embeddings (deterministic hash-based vectors) when using Groq, which does not support an Embeddings API.
+              Splits text logs and data row profiles into chunks and indexes them in ChromaDB. Each chunk is tagged with <code>date</code>, <code>region</code>, <code>source_file</code>, and <code>session_id</code> to allow highly targeted metadata-filtered searches during correlation checks.
             </Card>
-            <Card title="4. Discovery Agent" badge="agents/discovery.py" badgeColor="bg-zinc-900 border-zinc-800 text-zinc-400">
-              Runs two detection passes per numeric column: (a) IQR-based extreme outlier detection, flagging values outside 1.5× the interquartile range; (b) rolling-median metric drop detection, flagging any single row value that falls more than 30% below the local rolling median grouped by region. For each incident, the agent queries ChromaDB for correlated log entries matching the same date and region, then sends a structured prompt to the LLM to generate a natural-language root-cause explanation. Results are returned as a ranked <code>insights</code> list with severity labels.
+            <Card title="4. Discovery & Correlation Agent" badge="agents/discovery.py" badgeColor="bg-zinc-900 border-zinc-800 text-zinc-400">
+              Pinpoints outlier metrics using Interquartile Range (IQR) and rolling daily medians. For each anomaly detected, it queries ChromaDB for logs in the matching time/region window, and prompts GPT-4o to correlate logs with the metrics drops, outputting a ranked list of insights.
             </Card>
-            <Card title="5. Reporter Agent" badge="agents/reporter.py" badgeColor="bg-zinc-900 border-zinc-800 text-zinc-400">
-              Compiles a Markdown forensic audit report from the discovery output and generates <code>chart_specs</code> — JSON objects embedding real computed data (histogram bin counts, per-category aggregations, sampled scatter points, time-series values) so the frontend Visuals tab renders fully data-driven SVG charts without a charting library dependency.
+            <Card title="5. Multi-Agent Debate Engine" badge="agents/discovery.py -> run_agent_debate()" badgeColor="bg-indigo-950 border-indigo-900 text-indigo-400">
+              Uses Microsoft Semantic Kernel to orchestrate a virtual panel: the **Discovery Agent** proposes a root cause based on metrics, the **Validator Agent** challenges it by scanning secondary log timelines for inconsistencies, and the **Synthesis Agent** resolves arguments into a final verdict with a confidence rating and recovery action.
+            </Card>
+            <Card title="6. Reporter Agent" badge="agents/reporter.py" badgeColor="bg-zinc-900 border-zinc-800 text-zinc-400">
+              Formats the Markdown forensic audit report and compiles JSON <code>chart_specs</code> containing outlier histograms, scatter points, and trend-line coordinates. This lets the Next.js frontend render interactive custom SVG charts on-the-fly without bloated library dependencies.
             </Card>
           </div>
         </Section>
@@ -120,10 +124,10 @@ export default function DocsPage() {
         <Section icon={Zap} label="Supported AI Providers">
           <div className="space-y-3">
             {[
-              { name: "OpenAI", models: "gpt-4o, gpt-4o-mini, gpt-3.5-turbo", embeddings: "text-embedding-3-small, text-embedding-ada-002", note: "Full support including embeddings." },
-              { name: "Groq", models: "llama-3.3-70b-versatile, llama-3.1-8b-instant, mixtral-8x7b", embeddings: "Pseudo-embedding fallback (no Groq embedding API)", note: "Groq does not offer an embeddings endpoint. Meshloop automatically falls back to deterministic hash-based pseudo-embeddings at EMBEDDING_DIM=1536." },
-              { name: "Local / OpenAI-compatible", models: "Any model served on a local endpoint", embeddings: "Depends on the server", note: "Set the Base URL to your local server (e.g. http://localhost:11434/v1 for Ollama). API key can be set to any non-empty string." },
-              { name: "GitHub Models", models: "gpt-4o, Meta-Llama-3.1-70B, Mistral-large", embeddings: "text-embedding-3-small", note: "Use your GitHub personal access token as the API key. Base URL: https://models.inference.ai.azure.com" },
+              { name: "GitHub Models (Default)", models: "gpt-4o, microsoft/phi-4, Meta-Llama-3.1-70B", embeddings: "text-embedding-3-small", note: "Recommended endpoint. Use your GitHub PAT token as the API key. Configured with a dual-model setup: GPT-4o for debates and Phi-4 for cleaning/preprocessing." },
+              { name: "Ollama (Local)", models: "llama3.1, mistral, or any local LLM", embeddings: "nomic-embed-text, or local fallbacks", note: "Enables complete offline local inference at http://localhost:11434/v1 for strict air-gapped data compliance. No API keys are required." },
+              { name: "OpenAI", models: "gpt-4o, gpt-4o-mini, gpt-3.5-turbo", embeddings: "text-embedding-3-small", note: "Standard OpenAI endpoint integration. Requires a valid sk-... API key." },
+              { name: "Groq", models: "llama-3.3-70b-versatile, llama-3.1-8b-instant", embeddings: "Pseudo-embedding fallback", note: "Uses Groq's high-speed completion models. Since Groq lacks an embeddings API, Meshloop automatically falls back to local hash-based pseudo-embeddings." },
             ].map(p => (
               <div key={p.name} className="glass-card p-5 rounded-xl border border-zinc-900/80 space-y-2">
                 <div className="flex items-center gap-2">
@@ -143,12 +147,12 @@ export default function DocsPage() {
         <Section icon={FileText} label="Supported File Formats">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
-              { fmt: ".csv", desc: "Primary tabular format. Loaded directly into a Pandas DataFrame." },
-              { fmt: ".xlsx / .xls", desc: "Excel workbooks. All sheets are loaded as separate DataFrames." },
-              { fmt: ".json", desc: "Array-of-objects JSON loaded as a DataFrame. Nested structures are flattened." },
-              { fmt: ".txt", desc: "Plain-text server logs or reports. Chunked and indexed into the vector store." },
-              { fmt: ".pdf", desc: "PDF reports (text extraction via pdfminer). Indexed as unstructured log data." },
-              { fmt: ".zip", desc: "ZIP archives containing any mix of the above. All files are extracted and processed together as a single session." },
+              { fmt: ".csv", desc: "Primary tabular metrics. Loaded into Pandas DataFrames and analyzed for chronological anomalies and outliers." },
+              { fmt: ".xlsx / .xls", desc: "Excel workbooks. Multiple sheets are parsed as separate tabular metric feeds." },
+              { fmt: ".json", desc: "Structured logs or metric datasets. Nested JSON records are automatically flattened." },
+              { fmt: ".txt", desc: "Developer log dumps or system event files. Chunked and indexed in ChromaDB for similarity Q&A." },
+              { fmt: ".pdf", desc: "PDF documentation or operations manuals. Extracted using pdfminer for semantic log correlation." },
+              { fmt: ".zip", desc: "Bundled archives containing any combination of the above. Extracted and cross-correlated in a single session." },
             ].map(f => (
               <div key={f.fmt} className="glass-card p-4 rounded-xl border border-zinc-900/80 flex gap-3 items-start">
                 <code className="text-indigo-400 font-mono text-[10px] font-black shrink-0 pt-0.5">{f.fmt}</code>
@@ -163,81 +167,78 @@ export default function DocsPage() {
           <div className="space-y-4">
             <Endpoint
               method="POST" path="/api/analyze"
-              desc="Accepts multipart file uploads. Runs the full 5-stage ARCA pipeline and returns a session result. Accepts single files or ZIP archives."
+              desc="Ingests files via multipart upload. Runs the full ARCA pipeline and returns the serializable session results. Supports individual files or ZIP archives."
               schema={`# Headers (required)
-X-AI-Base-URL: https://api.openai.com/v1
-X-AI-API-Key: sk-...
-X-AI-Model: gpt-4o
-X-AI-Embedding-Model: text-embedding-3-small
+x-meshloop-provider: github
+x-meshloop-api-key: github_pat_...
+x-meshloop-base-url: https://models.github.ai/inference
+x-meshloop-chat-model: gpt-4o
+x-meshloop-embedding-model: text-embedding-3-small
 
 # Response
 {
   "session_id": "string",
-  "data_summary": {
-    "file_name": "string",
-    "file_names": ["string"],
-    "row_count": 1000,
-    "column_names": ["Date","Region","Sales"],
-    "file_type": "zip"
-  },
-  "cleaning": {
-    "issues_found": ["string"],
-    "cleaning_reports": {}
-  },
+  "data_summary": { "file_name": "string", "row_count": 1000, "column_names": [...] },
+  "cleaning": { "issues_found": [...], "cleaning_reports": {} },
   "discovery": {
-    "insights": [ { "title": "...", "severity": "high", "description": "...", "data_evidence": {} } ],
+    "insights": [...],
     "top_insight": {},
     "summary": "string",
-    "total_found": 42
+    "total_found": 4,
+    "agent_debate": { "debate": [...], "final_verdict": {} }
   },
-  "report": {
-    "report_text": "# Meshloop Forensic Audit Report ...",
-    "chart_specs": [ { "type": "histogram", "col": "Sales", "bins": [...], "mean": 512.3 } ]
-  }
+  "report": { "report_text": "Markdown...", "chart_specs": [...] }
 }`}
             />
             <Endpoint
+              method="POST" path="/api/analyze/sample"
+              desc="Runs the full ARCA analysis pipeline on the prepackaged Black Friday demo ZIP file located at sample_data/arca_test_dataset.zip."
+              schema={`# Request Headers: Same config headers as /api/analyze
+
+# Response: Same session result schema as /api/analyze`}
+            />
+            <Endpoint
               method="POST" path="/api/chat"
-              desc="Accepts a natural-language question and a session_id. Performs RAG retrieval from ChromaDB and returns an AI answer with supporting evidence."
-              schema={`# Request
+              desc="Sends a query to the Incident Room RAG Chat Agent. Performs similarity searches in ChromaDB to retrieve cited log excerpts."
+              schema={`# Request Body
 {
   "session_id": "string",
-  "question": "Why did Sales drop on 2024-01-10?",
+  "question": "How did the configuration change cause the outage?",
   "data_summary": {}
 }
 
 # Response
 {
-  "answer": "string",
-  "citations": ["string"],
-  "suggestions": ["string"]
+  "answer": "Answer text...",
+  "citations": ["deployment_log.txt [line 45]"],
+  "suggestions": ["Why did the database connections spike?", "What configuration was updated?"]
 }`}
             />
             <Endpoint
-              method="GET" path="/api/session/{session_id}"
-              desc="Retrieves a cached session result by ID. Sessions are stored in-memory and cleared when the backend process restarts."
-              schema={`# Response: same shape as /api/analyze response`}
+              method="GET" path="/api/export/cleaned"
+              desc="Downloads the cleaned version of a metrics dataset in CSV format."
+              schema={`# Query Parameters
+session_id=string&filename=metrics.csv`}
             />
             <Endpoint
-              method="GET" path="/api/export/{session_id}/{format}"
-              desc="Exports the session result in the specified format. Supported formats: json, csv, markdown."
-              schema={`# Formats
-json     → Full session result as JSON
-csv      → Insights list as a CSV table
-markdown → Audit report as a .md download`}
+              method="GET" path="/api/export/balanced"
+              desc="Downloads the oversampled category-balanced version of a metrics dataset in CSV format."
+              schema={`# Query Parameters
+session_id=string&filename=metrics.csv`}
             />
             <Endpoint
-              method="GET" path="/health"
-              desc="Health check endpoint. Returns service status and current session count."
-              schema={`{ "status": "ok", "sessions": 3 }`}
+              method="GET" path="/api/export/report"
+              desc="Downloads the compiled forensic audit report in Markdown format."
+              schema={`# Query Parameters
+session_id=string`}
             />
           </div>
         </Section>
 
         {/* Config */}
         <Section icon={Terminal} label="Environment & Configuration">
-          <Card title="Settings Panel (In-App)" badge="No .env Required">
-            All AI configuration is done at runtime through the Settings panel in the top navigation bar. Your API key, base URL, chat model, and embedding model are sent as request headers (<code>X-AI-*</code>) with each analysis call — they are never stored server-side. You can switch providers between sessions without restarting the backend.
+          <Card title="Settings Panel (In-App)" badge="No Local Environment Files Required">
+            All LLM endpoints are configured dynamically at runtime through the settings panel. Credential headers (<code>x-meshloop-provider</code>, <code>x-meshloop-api-key</code>, <code>x-meshloop-base-url</code>, <code>x-meshloop-chat-model</code>, <code>x-meshloop-embedding-model</code>) are passed from browser memory, which are stored locally in the browser's <code>localStorage</code> under the key <code>meshloop-ai-config</code>.
           </Card>
           <Card title="Backend Environment Variables" badge="Optional">
             <div className="space-y-2">
